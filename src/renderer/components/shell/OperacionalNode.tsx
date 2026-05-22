@@ -1,6 +1,7 @@
 import React from 'react'
 import type { OperacionalNodeData } from '../../types/operacional'
 import { NodeIcon } from './icons'
+import { pt } from '../../i18n'
 
 const CAT_BORDER: Record<OperacionalNodeData['categoria'], string> = {
   ferramenta: 'border-l-[var(--omni-text-dim)]',
@@ -26,11 +27,19 @@ interface Props {
 
 export function OperacionalNode({ node, selected, onSelect, onAction }: Props) {
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onSelect}
+      onDoubleClick={(e) => {
+        e.preventDefault()
+        onAction()
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') onAction()
+      }}
       className={`
-        group text-left w-full min-h-[128px] p-4 rounded-[var(--omni-radius-node)]
+        group text-left w-full min-h-[128px] p-4 rounded-[var(--omni-radius-node)] cursor-pointer
         border border-[var(--omni-border)] border-l-[3px] ${CAT_BORDER[node.categoria]}
         bg-[var(--omni-bg-elevated)] transition-all duration-150
         hover:border-[var(--omni-border-active)] hover:bg-[var(--omni-bg-hover)]
@@ -41,22 +50,23 @@ export function OperacionalNode({ node, selected, onSelect, onAction }: Props) {
         <span className="text-[var(--omni-text-muted)]">
           <NodeIcon name={node.icon} className="w-7 h-7" />
         </span>
-        <span className={`w-2 h-2 rounded-full ${STATUS_COLOR[node.status]}`} title={node.status} />
+        <span className={`w-2 h-2 rounded-full shrink-0 ${STATUS_COLOR[node.status]}`} title={node.status} />
       </div>
       <div className="font-semibold text-sm tracking-wide">{node.nome}</div>
       <div className="text-xs text-[var(--omni-text-muted)] mt-1 line-clamp-2">{node.subtitulo}</div>
-      <span
-        role="button"
-        tabIndex={0}
+      <button
+        type="button"
         onClick={(e) => {
           e.stopPropagation()
           onAction()
         }}
-        onKeyDown={(e) => e.key === 'Enter' && onAction()}
-        className="inline-block mt-3 text-xs font-medium text-[var(--omni-accent-focus)] opacity-80 group-hover:opacity-100"
+        className="mt-3 w-full py-2 rounded-md text-xs font-semibold bg-[var(--omni-accent-focus)]/15 text-[var(--omni-accent-focus)] border border-[var(--omni-border-active)] hover:bg-[var(--omni-accent-focus)] hover:text-white transition-colors"
       >
-        {node.acaoLabel} →
-      </span>
-    </button>
+        {node.acaoLabel}
+      </button>
+      <p className="text-[9px] text-[var(--omni-text-dim)] mt-1 opacity-0 group-hover:opacity-100">
+        {pt.dicaDuploClique}
+      </p>
+    </div>
   )
 }

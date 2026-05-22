@@ -16,6 +16,13 @@ import { StreamPensamento } from './StreamPensamento'
 import { VerificadorRequisitos } from './VerificadorRequisitos'
 import { useAtalhosTeclado } from './AtalhosTeclado'
 import type { OperacionalNodeData, SidebarView, LauncherItem } from '../types/operacional'
+import { pt } from '../i18n'
+
+const MODO_PT: Record<string, string> = {
+  FOCO: pt.modoFoco,
+  FLEX: pt.modoFlex,
+  APRENDIZADO: pt.modoAprendizado
+}
 
 interface Sessao {
   sessaoId: number
@@ -71,6 +78,11 @@ export default function EstacaoApp() {
   const [mostrarStream, setMostrarStream] = useState(false)
   const [mostrarVerificador, setMostrarVerificador] = useState(false)
   const [auxiliarAberta, setAuxiliarAberta] = useState(false)
+
+  const notify = useCallback((msg: string, ok = true) => {
+    setMensagemNotificacao(ok ? msg : `${pt.erroPrefixo}${msg}`)
+    setTimeout(() => setMensagemNotificacao(''), ok ? 3500 : 5500)
+  }, [])
 
   const irParaLogin = useCallback(() => {
     setSessao(null)
@@ -132,7 +144,9 @@ export default function EstacaoApp() {
     carregarTarefas()
     carregarApps()
     carregarWorkspaces()
-    carregarInventario()
+    // Inventário winget pode demorar — não travar a UI no abrir
+    const invTimer = setTimeout(() => carregarInventario(), 800)
+    return () => clearTimeout(invTimer)
   }, [tela])
 
   useEffect(() => {
@@ -166,54 +180,71 @@ export default function EstacaoApp() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
   }
 
-  const abrirApp = (item: LauncherItem) => {
-    if (item.tipo === 'app' && item.path) {
-      window.electronAPI.abrirApp(item.path.replace('%USERNAME%', ''))
-    } else if (item.url) {
-      window.electronAPI.abrirSite(item.url)
-    }
+  const abrirApp = async (item: LauncherItem) => {
+    const r = await window.electronAPI.launcherAbrirItem({
+      tipo: item.tipo,
+      path: item.path,
+      url: item.url,
+      nome: item.nome
+    })
+    notify(r.mensagem || r.motivo || (r.sucesso ? 'Aberto' : 'Não foi possível abrir'), r.sucesso)
   }
 
   const handleNodeAction = async (node: OperacionalNodeData) => {
-    switch (node.id) {
-      case 'fluxo-foco':
-        if (estado.pomodoroAtivo) await window.electronAPI.pomodoroPausar()
-        else await window.electronAPI.pomodoroIniciar()
-        setSidebarView('foco')
-        break
-      case 'fluxo-nota':
-        setSidebarView('notas')
-        break
-      case 'fluxo-inbox':
-        setSidebarView('tarefas')
-        break
-      case 'ctx-workspace':
-        setSidebarView('workspaces')
-        break
-      case 'amb-verificar':
-      case 'amb-scan':
-        setSidebarView('ambiente')
-        carregarInventario()
-        break
-      case 'int-propostas':
-        setMostrarCaixaPropostas(true)
-        break
-      default:
-        if (node.categoria === 'ferramenta' && node.payload?.app) {
-          abrirApp((node.payload as { app: LauncherItem }).app)
-        }
-        if (node.id.startsWith('amb-') && node.payload) {
-          const p = node.payload as { appId: string; appNome: string }
-          await window.electronAPI.ambienteSugerirInstalacao(p.appId, p.appNome)
-          setMensagemNotificacao('Proposta criada')
+    try {
+      switch (node.id) {
+        case 'fluxo-foco':
+          if (estado.pomodoroAtivo) {
+            await window.electronAPI.pomodoroPausar()
+            notify('Pomodoro pausado')
+          } else {
+            await window.electronAPI.pomodoroIniciar()
+            notify('Pomodoro iniciado — modo FOCO')
+          }
+          setSidebarView('foco')
+          break
+        case 'fluxo-nota':
+          setSidebarView('notas')
+          notify('Aba Notas aberta')
+          break
+        case 'fluxo-inbox':
+          setSidebarView('tarefas')
+          notify('Aba Tarefas aberta')
+          break
+        case 'ctx-workspace':
+          setSidebarView('workspaces')
+          break
+        case 'amb-verificar':
+        case 'amb-scan':
+          setSidebarView('ambiente')
+          notify('Atualizando inventário…')
+          await carregarInventario()
+          notify('Inventário atualizado')
+          break
+        case 'int-propostas':
           setMostrarCaixaPropostas(true)
-        }
+          notify('Caixa de propostas aberta')
+          break
+        default:
+          if (node.categoria === 'ferramenta' && node.payload?.app) {
+            await abrirApp((node.payload as { app: LauncherItem }).app)
+            return
+          }
+          if (node.id.startsWith('amb-') && node.id !== 'amb-scan' && node.payload) {
+            const p = node.payload as { appId: string; appNome: string }
+            await window.electronAPI.ambienteSugerirInstalacao(p.appId, p.appNome)
+            setMostrarCaixaPropostas(true)
+            notify('Proposta de instalação criada')
+          }
+      }
+    } catch (e) {
+      notify(String(e), false)
     }
   }
 
   const estadoLabel = estado.pomodoroAtivo
-    ? `Foco ${formatarTempo(estado.tempoRestante)}`
-    : estado.modo
+    ? `${pt.modoFoco} ${formatarTempo(estado.tempoRestante)}`
+    : MODO_PT[estado.modo] || estado.modo
 
   const estadoCor = estado.pomodoroAtivo
     ? 'bg-[var(--omni-accent-focus)]/20 text-[var(--omni-accent-focus)]'
@@ -221,26 +252,29 @@ export default function EstacaoApp() {
       ? 'bg-[var(--omni-status-ok)]/20 text-[var(--omni-status-ok)]'
       : 'bg-[var(--omni-bg-hover)] text-[var(--omni-text-muted)]'
 
-  const acaoRapida = () => {
+  const acaoRapida = async () => {
     if (estado.pomodoroAtivo) {
-      window.electronAPI.pomodoroPausar()
+      await window.electronAPI.pomodoroPausar()
+      notify('Pomodoro pausado')
     } else if (tarefas[0]) {
-      window.electronAPI.pomodoroIniciar(tarefas[0].id, tarefas[0].titulo)
+      await window.electronAPI.pomodoroIniciar(tarefas[0].id, tarefas[0].titulo)
       setSidebarView('foco')
+      notify(`Foco: ${tarefas[0].titulo}`)
     } else {
-      window.electronAPI.pomodoroIniciar()
+      await window.electronAPI.pomodoroIniciar()
       setSidebarView('foco')
+      notify('Pomodoro iniciado')
     }
   }
 
   const commands: CommandItem[] = [
-    { id: 'foco', label: 'Iniciar / ir para Foco', group: 'Fluxo', run: () => setSidebarView('foco') },
-    { id: 'prop', label: 'Caixa de propostas', group: 'Sistema', run: () => setMostrarCaixaPropostas(true) },
-    { id: 'ia', label: 'Acompanhar IA', group: 'Sistema', run: () => setMostrarStream(true) },
-    { id: '2t', label: 'Segunda tela', group: 'Sistema', run: () => window.electronAPI.multitelaAbrir() },
-    { id: 'flex', label: 'Modo FLEX', group: 'Modo', run: () => window.electronAPI.setModo('FLEX') },
-    { id: 'aprend', label: 'Modo APRENDIZADO', group: 'Modo', run: () => window.electronAPI.setModo('APRENDIZADO') },
-    { id: 'fs', label: 'Alternar tela cheia', group: 'Janela', run: async () => {
+    { id: 'foco', label: pt.cmdIrFoco, group: pt.cmdGrupoFluxo, run: () => setSidebarView('foco') },
+    { id: 'prop', label: pt.cmdPropostas, group: pt.cmdGrupoSistema, run: () => setMostrarCaixaPropostas(true) },
+    { id: 'ia', label: pt.cmdIa, group: pt.cmdGrupoSistema, run: () => setMostrarStream(true) },
+    { id: '2t', label: pt.cmdSegundaTela, group: pt.cmdGrupoSistema, run: () => window.electronAPI.multitelaAbrir() },
+    { id: 'flex', label: pt.cmdModoFlex, group: pt.cmdGrupoModo, run: () => window.electronAPI.setModo('FLEX') },
+    { id: 'aprend', label: pt.cmdModoAprend, group: pt.cmdGrupoModo, run: () => window.electronAPI.setModo('APRENDIZADO') },
+    { id: 'fs', label: pt.cmdTelaCheia, group: pt.cmdGrupoJanela, run: async () => {
       const next = !fullscreen
       await window.electronAPI.estacaoSetFullscreen(next)
       setFullscreen(next)
@@ -398,7 +432,7 @@ export default function EstacaoApp() {
             else await window.electronAPI.iaPerguntar(t)
           }
         }}
-        placeholder={estado.modo === 'FOCO' ? 'Anotação (buffer)…' : 'Pergunta à IA…'}
+            placeholder={estado.modo === 'FOCO' ? pt.iaAnotacaoFoco : pt.iaPergunta}
         className="w-full px-2 py-1.5 text-xs rounded bg-[var(--omni-bg-base)] border border-[var(--omni-border)]"
       />
     </div>
@@ -413,7 +447,7 @@ export default function EstacaoApp() {
         usuarioNome={sessao.usuarioNome}
         estadoLabel={estadoLabel}
         estadoCor={estadoCor}
-        acaoRapidaLabel={estado.pomodoroAtivo ? 'Pausar foco' : 'Iniciar foco'}
+        acaoRapidaLabel={estado.pomodoroAtivo ? pt.pausarFoco : pt.iniciarFoco}
         onAcaoRapida={acaoRapida}
         onLogout={async () => {
           await window.electronAPI.authLogout()

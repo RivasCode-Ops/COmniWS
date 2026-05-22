@@ -1,6 +1,7 @@
 import React from 'react'
 import { OperacionalNode } from '../shell/OperacionalNode'
 import type { OperacionalNodeData, LauncherItem } from '../../types/operacional'
+import { pt } from '../../i18n'
 
 interface Props {
   apps: LauncherItem[]
@@ -14,8 +15,8 @@ export function ViewFerramentas({ apps, selectedId, onSelect, onAbrir }: Props) 
     id: `tool-${app.nome}`,
     categoria: 'ferramenta',
     nome: app.nome,
-    subtitulo: app.tipo === 'site' ? 'Site' : 'App',
-    acaoLabel: 'Abrir',
+    subtitulo: app.tipo === 'site' ? pt.tipoSite : pt.tipoApp,
+    acaoLabel: pt.abrir,
     status: 'idle',
     icon: app.tipo === 'site' ? 'external' : 'zap',
     payload: { app }
@@ -23,7 +24,7 @@ export function ViewFerramentas({ apps, selectedId, onSelect, onAbrir }: Props) 
 
   return (
     <div className="h-full overflow-y-auto p-6">
-      <h2 className="text-lg font-semibold mb-4">Ferramentas</h2>
+      <h2 className="text-lg font-semibold mb-4">{pt.ferramentasTitulo}</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
         {nodes.map((node) => (
           <OperacionalNode

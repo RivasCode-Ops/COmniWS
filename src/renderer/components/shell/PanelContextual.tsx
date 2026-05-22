@@ -1,6 +1,7 @@
 import React from 'react'
 import type { OperacionalNodeData } from '../../types/operacional'
 import type { LauncherItem } from '../../types/operacional'
+import { pt } from '../../i18n'
 
 interface Estado {
   modo: string
@@ -37,13 +38,13 @@ export function PanelContextual({
   return (
     <div className="p-4 h-full flex flex-col text-sm">
       <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--omni-text-dim)] mb-4">
-        Contexto
+        {pt.painelTitulo}
       </h3>
 
       {!selectedNode ? (
         <div className="space-y-4 flex-1">
           <div className="p-3 rounded-lg bg-[var(--omni-bg-base)] border border-[var(--omni-border)]">
-            <div className="text-[10px] text-[var(--omni-text-dim)] mb-1">Estação</div>
+            <div className="text-[10px] text-[var(--omni-text-dim)] mb-1">{pt.painelEstacao}</div>
             <div className="font-medium">{estado.modo}</div>
             <div className="omni-mono text-2xl mt-2 tabular-nums">{formatarTempo(estado.tempoRestante)}</div>
             {estado.tarefaAtualTitulo && (
@@ -51,8 +52,8 @@ export function PanelContextual({
             )}
           </div>
           <div className="text-xs text-[var(--omni-text-muted)] space-y-1">
-            <p>{tarefasCount} tarefa(s) na inbox</p>
-            <p>{ausentesCount} ferramenta(s) ausente(s)</p>
+            <p>{pt.tarefasInbox(tarefasCount)}</p>
+            <p>{pt.ferramentasFalta(ausentesCount)}</p>
           </div>
           {!estado.pomodoroAtivo && (
             <button
@@ -60,12 +61,10 @@ export function PanelContextual({
               onClick={onIniciarPomodoro}
               className="w-full py-2 rounded-lg bg-[var(--omni-accent-focus)] text-xs font-semibold"
             >
-              Iniciar foco agora
+              {pt.iniciarFocoAgora}
             </button>
           )}
-          <p className="text-[10px] text-[var(--omni-text-dim)]">
-            Selecione um bloco no canvas para ver detalhes e ações.
-          </p>
+          <p className="text-[10px] text-[var(--omni-text-dim)]">{pt.selecioneBloco}</p>
         </div>
       ) : (
         <div className="flex-1 space-y-4">
@@ -87,7 +86,7 @@ export function PanelContextual({
               onClick={() => onAbrirApp((selectedNode.payload as { app: LauncherItem }).app)}
               className="w-full py-2 rounded-lg border border-[var(--omni-border)] text-xs"
             >
-              Abrir agora
+              {pt.abrirAgora}
             </button>
           )}
         </div>

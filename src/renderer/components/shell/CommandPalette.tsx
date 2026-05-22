@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { pt } from '../../i18n'
 
 export interface CommandItem {
   id: string
@@ -47,7 +48,7 @@ export function CommandPalette({ open, onClose, commands }: Props) {
           autoFocus
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Comando ou busca…"
+          placeholder={pt.cmdBusca}
           className="w-full px-4 py-3 bg-transparent border-b border-[var(--omni-border)] text-sm outline-none"
         />
         <ul className="max-h-64 overflow-y-auto py-1">
@@ -67,7 +68,7 @@ export function CommandPalette({ open, onClose, commands }: Props) {
             </li>
           ))}
           {filtrados.length === 0 && (
-            <li className="px-4 py-6 text-center text-sm text-[var(--omni-text-muted)]">Nenhum comando</li>
+            <li className="px-4 py-6 text-center text-sm text-[var(--omni-text-muted)]">{pt.cmdNenhum}</li>
           )}
         </ul>
       </div>

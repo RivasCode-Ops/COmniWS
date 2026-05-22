@@ -1,4 +1,5 @@
 import React from 'react'
+import { pt } from '../../i18n'
 
 interface Props {
   fullscreen: boolean
@@ -24,25 +25,36 @@ export function ViewConfig({
 
   return (
     <div className="h-full overflow-y-auto p-6 max-w-lg mx-auto">
-      <h2 className="text-lg font-semibold mb-6">Configurações</h2>
+      <h2 className="text-lg font-semibold mb-6">{pt.configTitulo}</h2>
+
+      <h3 className="text-sm font-medium text-[var(--omni-text-muted)] mb-2">{pt.idioma}</h3>
+      <select
+        value="pt-BR"
+        disabled
+        className="w-full mb-2 px-3 py-2 rounded-lg bg-[var(--omni-bg-base)] border border-[var(--omni-border)] text-sm text-[var(--omni-text-primary)]"
+        title={pt.idiomaFuturo}
+      >
+        <option value="pt-BR">{pt.idiomaPt}</option>
+      </select>
+      <p className="text-xs text-[var(--omni-text-dim)] mb-1">{pt.idiomaAjuda}</p>
+      <p className="text-xs text-[var(--omni-text-dim)] mb-6">{pt.idiomaFuturo}</p>
+
       <button type="button" className={btn} onClick={onToggleFullscreen}>
-        {fullscreen ? 'Sair da tela cheia' : 'Entrar em tela cheia'}
+        {fullscreen ? pt.telaCheiaSair : pt.telaCheiaEntrar}
       </button>
       <button type="button" className={btn} onClick={onVerificador}>
-        Verificar requisitos (RAM, winget, Ollama)
+        {pt.verificarRequisitos}
       </button>
       <button type="button" className={btn} onClick={onPropostas}>
-        Caixa de propostas
+        {pt.caixaPropostas}
       </button>
       <button type="button" className={btn} onClick={onStream}>
-        Acompanhar IA (sondagem)
+        {pt.acompanharIa}
       </button>
       <button type="button" className={btn} onClick={onSegundaTela}>
-        {auxiliarAberta ? 'Fechar segunda tela' : 'Abrir segunda tela'} (R6)
+        {auxiliarAberta ? pt.segundaTelaFechar : pt.segundaTelaAbrir}
       </button>
-      <p className="text-xs text-[var(--omni-text-dim)] mt-6">
-        Modos FLEX / FOCO / APRENDIZADO: use Ctrl+Shift+1/2/3 ou a paleta Ctrl+K.
-      </p>
+      <p className="text-xs text-[var(--omni-text-dim)] mt-6">{pt.atalhosModos}</p>
     </div>
   )
 }

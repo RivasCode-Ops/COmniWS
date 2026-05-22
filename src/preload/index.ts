@@ -94,6 +94,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Launcher
   abrirApp: (path: string) => ipcRenderer.invoke('abrir-app', path),
   abrirSite: (url: string) => ipcRenderer.invoke('abrir-site', url),
+  launcherAbrirItem: (item: { tipo: 'app' | 'site'; path?: string; url?: string; nome?: string }) =>
+    ipcRenderer.invoke('launcher-abrir-item', item),
   launcherApps: () => ipcRenderer.invoke('launcher-apps'),
 
   // Auth e sessão (Fase 10)
@@ -220,6 +222,12 @@ declare global {
       configAutoStart: (enabled: boolean) => Promise<{ sucesso: boolean; autoStart: boolean }>
       abrirApp: (path: string) => Promise<{ sucesso: boolean; erro?: string }>
       abrirSite: (url: string) => Promise<{ sucesso: boolean; erro?: string }>
+      launcherAbrirItem: (item: {
+        tipo: 'app' | 'site'
+        path?: string
+        url?: string
+        nome?: string
+      }) => Promise<{ sucesso: boolean; mensagem?: string; motivo?: string }>
       launcherApps: () => Promise<
         Array<{ nome: string; path?: string; url?: string; tipo: 'app' | 'site' }>
       >

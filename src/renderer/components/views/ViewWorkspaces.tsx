@@ -1,4 +1,5 @@
 import React from 'react'
+import { pt } from '../../i18n'
 
 interface Workspace {
   id: number
@@ -14,7 +15,7 @@ interface Props {
 export function ViewWorkspaces({ workspaces, onAtivar }: Props) {
   return (
     <div className="h-full overflow-y-auto p-6 max-w-lg mx-auto">
-      <h2 className="text-lg font-semibold mb-4">Workspaces</h2>
+      <h2 className="text-lg font-semibold mb-4">{pt.espacosTitulo}</h2>
       <ul className="space-y-2">
         {workspaces.map((ws) => (
           <li key={ws.id}>
@@ -29,7 +30,7 @@ export function ViewWorkspaces({ workspaces, onAtivar }: Props) {
             >
               <span className="font-medium text-sm">{ws.nome}</span>
               {ws.ativo ? (
-                <span className="ml-2 text-[10px] text-[var(--omni-accent-focus)]">ativo</span>
+                <span className="ml-2 text-[10px] text-[var(--omni-accent-focus)]">{pt.espacoAtivoBadge}</span>
               ) : null}
             </button>
           </li>

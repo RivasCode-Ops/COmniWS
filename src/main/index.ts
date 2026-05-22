@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { join } from 'path'
+import { existsSync } from 'fs'
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import os from 'os'
@@ -267,7 +268,7 @@ function createMainWindow() {
     minWidth: 800,
     minHeight: 600,
     frame: true,
-    title: 'Omni Work Station',
+    title: 'Omni Estação de Trabalho',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -669,13 +670,57 @@ ipcMain.handle('ambiente-sugerir-instalacao', (_, appId: string, appNome: string
 })
 
 ipcMain.handle('abrir-app', async (_, appPath: string) => {
-  try {
-    exec(`start "" "${appPath}"`)
-    return { sucesso: true }
-  } catch (error) {
-    return { sucesso: false, erro: String(error) }
-  }
+  return abrirItemLauncher({ tipo: 'app', path: appPath, nome: appPath })
 })
+
+ipcMain.handle('launcher-abrir-item', async (_, item: { tipo: 'app' | 'site'; path?: string; url?: string; nome?: string }) => {
+  return abrirItemLauncher(item)
+})
+
+async function abrirItemLauncher(item: {
+  tipo: 'app' | 'site'
+  path?: string
+  url?: string
+  nome?: string
+}): Promise<{ sucesso: boolean; mensagem?: string; motivo?: string }> {
+  const label = item.nome || item.path || item.url || 'item'
+
+  try {
+    if (item.tipo === 'site' && item.url) {
+      await shell.openExternal(item.url)
+      logger.info(`Launcher: site ${item.url}`)
+      return { sucesso: true, mensagem: `Abrindo ${label}` }
+    }
+
+    if (!item.path) {
+      return { sucesso: false, motivo: 'Caminho do app não configurado' }
+    }
+
+    const resolved = item.path.replace('%USERNAME%', process.env.USERNAME || os.userInfo().username)
+    const isExePath = /[\\/]/.test(resolved) && /\.(exe|lnk)$/i.test(resolved)
+
+    if (isExePath || (resolved.includes('\\') && existsSync(resolved))) {
+      if (!existsSync(resolved)) {
+        return { sucesso: false, motivo: `Não encontrado: ${resolved}` }
+      }
+      const errMsg = await shell.openPath(resolved)
+      if (errMsg) return { sucesso: false, motivo: errMsg }
+      return { sucesso: true, mensagem: `Abrindo ${label}` }
+    }
+
+    // Comando no PATH (code, etc.)
+    await new Promise<void>((resolve, reject) => {
+      exec(`cmd /c start "" ${resolved}`, (error) => {
+        if (error) reject(error)
+        else resolve()
+      })
+    })
+    return { sucesso: true, mensagem: `Abrindo ${label}` }
+  } catch (error) {
+    logger.error('Launcher abrir falhou:', error)
+    return { sucesso: false, motivo: String(error) }
+  }
+}
 
 ipcMain.handle('abrir-site', async (_, url: string) => {
   try {

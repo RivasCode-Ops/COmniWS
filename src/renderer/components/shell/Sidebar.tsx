@@ -1,15 +1,16 @@
 import React from 'react'
 import type { SidebarView } from '../../types/operacional'
+import { pt } from '../../i18n'
 
 const ITENS: { id: SidebarView; label: string }[] = [
-  { id: 'hoje', label: 'Hoje' },
-  { id: 'workspaces', label: 'Workspaces' },
-  { id: 'foco', label: 'Foco' },
-  { id: 'tarefas', label: 'Tarefas' },
-  { id: 'notas', label: 'Notas' },
-  { id: 'ferramentas', label: 'Ferramentas' },
-  { id: 'ambiente', label: 'Ambiente' },
-  { id: 'config', label: 'Configurações' }
+  { id: 'hoje', label: pt.navHoje },
+  { id: 'workspaces', label: pt.navEspacos },
+  { id: 'foco', label: pt.navFoco },
+  { id: 'tarefas', label: pt.navTarefas },
+  { id: 'notas', label: pt.navNotas },
+  { id: 'ferramentas', label: pt.navFerramentas },
+  { id: 'ambiente', label: pt.navAmbiente },
+  { id: 'config', label: pt.navConfig }
 ]
 
 interface Props {
@@ -25,7 +26,7 @@ export function Sidebar({ view, onChange }: Props) {
     >
       <div className="px-4 mb-4">
         <div className="text-xs font-bold tracking-widest text-[var(--omni-text-dim)]">OMNI</div>
-        <div className="text-[10px] text-[var(--omni-text-muted)]">Work Station</div>
+        <div className="text-[10px] text-[var(--omni-text-muted)]">{pt.appSubtitulo}</div>
       </div>
       {ITENS.map((item) => (
         <button

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { pt } from '../i18n'
 
 interface LoginProps {
   onSuccess: () => void
@@ -27,7 +28,7 @@ export function Login({ onSuccess }: LoginProps) {
       if (precisaSetup) {
         const setup = await window.electronAPI.authSetup(nome, pin)
         if (!setup.sucesso) {
-          setErro(setup.motivo || 'Falha ao criar perfil')
+          setErro(setup.motivo || 'Não foi possível criar o perfil')
           return
         }
       }
@@ -39,7 +40,7 @@ export function Login({ onSuccess }: LoginProps) {
         return
       }
       if (!login.sucesso) {
-        setErro(login.motivo || 'Login falhou')
+        setErro(login.motivo || 'PIN incorreto')
         return
       }
       onSuccess()
@@ -52,35 +53,35 @@ export function Login({ onSuccess }: LoginProps) {
     <div className="omni-shell min-h-screen flex items-center justify-center p-8">
       <div className="w-full max-w-md rounded-[var(--omni-radius-node)] p-8 border border-[var(--omni-border)] bg-[var(--omni-bg-elevated)] shadow-2xl">
         <div className="text-center mb-8">
-          <div className="omni-mono text-xs tracking-[0.3em] text-[var(--omni-text-dim)]">OMNI WORK</div>
-          <h1 className="text-xl font-semibold mt-2">Estação local</h1>
-          <p className="text-xs text-[var(--omni-text-muted)] mt-1">Desktop · fullscreen · operação</p>
+          <div className="omni-mono text-xs tracking-[0.3em] text-[var(--omni-text-dim)]">{pt.loginMarca}</div>
+          <h1 className="text-xl font-semibold mt-2">{pt.loginTitulo}</h1>
+          <p className="text-xs text-[var(--omni-text-muted)] mt-1">{pt.loginSub}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {(precisaSetup || nome) && (
             <div>
               <label className="block text-[11px] uppercase tracking-wide text-[var(--omni-text-dim)] mb-1">
-                Perfil
+                {pt.perfil}
               </label>
               <input
                 type="text"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-lg bg-[var(--omni-bg-base)] border border-[var(--omni-border)] text-sm outline-none focus:border-[var(--omni-border-active)]"
-                placeholder="Seu nome"
+                placeholder={pt.perfilPlaceholder}
                 required={precisaSetup}
               />
             </div>
           )}
           <div>
-            <label className="block text-[11px] uppercase tracking-wide text-[var(--omni-text-dim)] mb-1">PIN</label>
+            <label className="block text-[11px] uppercase tracking-wide text-[var(--omni-text-dim)] mb-1">{pt.pin}</label>
             <input
               type="password"
               value={pin}
               onChange={(e) => setPin(e.target.value)}
               className="w-full px-3 py-2.5 rounded-lg bg-[var(--omni-bg-base)] border border-[var(--omni-border)] omni-mono text-sm outline-none focus:border-[var(--omni-border-active)]"
-              placeholder="••••"
+              placeholder={pt.pinPlaceholder}
               minLength={4}
               required
             />
@@ -95,13 +96,11 @@ export function Login({ onSuccess }: LoginProps) {
             disabled={carregando}
             className="w-full py-3 rounded-lg bg-[var(--omni-accent-focus)] text-sm font-semibold disabled:opacity-50"
           >
-            {carregando ? 'Entrando…' : precisaSetup ? 'Criar e entrar' : 'Entrar na estação'}
+            {carregando ? pt.entrando : precisaSetup ? pt.criarEntrar : pt.entrar}
           </button>
         </form>
 
-        <p className="text-[10px] text-[var(--omni-text-dim)] text-center mt-6">
-          Dados no seu PC. Automações exigem autorização (R1).
-        </p>
+        <p className="text-[10px] text-[var(--omni-text-dim)] text-center mt-6">{pt.loginRodape}</p>
       </div>
     </div>
   )

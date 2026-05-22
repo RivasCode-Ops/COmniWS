@@ -66,7 +66,13 @@ export function EstacaoShell({
       </div>
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg text-sm bg-[var(--omni-status-ok)] text-[#0d0f12] font-medium shadow-lg">
+        <div
+          className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-lg text-sm font-medium shadow-lg max-w-md text-center ${
+            toast.startsWith('Erro')
+              ? 'bg-[var(--omni-status-error)] text-white'
+              : 'bg-[var(--omni-status-ok)] text-[#0d0f12]'
+          }`}
+        >
           {toast}
         </div>
       )}

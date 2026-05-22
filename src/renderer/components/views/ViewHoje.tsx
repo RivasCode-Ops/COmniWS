@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
 import { OperacionalNode } from '../shell/OperacionalNode'
 import type { OperacionalNodeData, LauncherItem } from '../../types/operacional'
+import { pt } from '../../i18n'
 
 interface Props {
   apps: LauncherItem[]
@@ -29,8 +30,8 @@ export function ViewHoje({
         id: `tool-${app.nome}`,
         categoria: 'ferramenta',
         nome: app.nome,
-        subtitulo: app.tipo === 'site' ? 'Abrir no navegador' : 'Aplicativo local',
-        acaoLabel: 'Abrir',
+        subtitulo: app.tipo === 'site' ? pt.abrirNavegador : pt.appLocal,
+        acaoLabel: pt.abrir,
         status: 'idle',
         icon: app.tipo === 'site' ? 'external' : 'zap',
         payload: { app }
@@ -40,9 +41,9 @@ export function ViewHoje({
     list.push({
       id: 'fluxo-foco',
       categoria: 'fluxo',
-      nome: pomodoroAtivo ? 'Pausar foco' : 'Iniciar foco',
-      subtitulo: 'Pomodoro 25 min · modo FOCO',
-      acaoLabel: pomodoroAtivo ? 'Pausar' : 'Iniciar',
+      nome: pomodoroAtivo ? pt.pausarFocoBloco : pt.iniciarFocoBloco,
+      subtitulo: pt.pomodoroSub,
+      acaoLabel: pomodoroAtivo ? pt.pausar : pt.iniciar,
       status: pomodoroAtivo ? 'ok' : 'idle',
       icon: 'clock'
     })
@@ -50,9 +51,9 @@ export function ViewHoje({
     list.push({
       id: 'fluxo-nota',
       categoria: 'fluxo',
-      nome: 'Capturar nota',
-      subtitulo: 'Nota inteligente rápida',
-      acaoLabel: 'Capturar',
+      nome: pt.capturarNota,
+      subtitulo: pt.notaRapida,
+      acaoLabel: pt.capturar,
       status: 'idle',
       icon: 'note'
     })
@@ -60,9 +61,9 @@ export function ViewHoje({
     list.push({
       id: 'fluxo-inbox',
       categoria: 'fluxo',
-      nome: 'Revisar inbox',
-      subtitulo: `${tarefasCount} tarefa(s) pendente(s)`,
-      acaoLabel: 'Ver tarefas',
+      nome: pt.revisarEntradas,
+      subtitulo: pt.tarefasPendentes(tarefasCount),
+      acaoLabel: pt.navTarefas,
       status: tarefasCount > 0 ? 'warn' : 'ok',
       icon: 'list'
     })
@@ -70,9 +71,9 @@ export function ViewHoje({
     list.push({
       id: 'ctx-workspace',
       categoria: 'contexto',
-      nome: 'Workspace ativo',
-      subtitulo: 'Contexto operacional atual',
-      acaoLabel: 'Trocar',
+      nome: pt.espacoAtivo,
+      subtitulo: pt.contextoAtual,
+      acaoLabel: pt.trocar,
       status: 'idle',
       icon: 'grid'
     })
@@ -80,9 +81,9 @@ export function ViewHoje({
     list.push({
       id: 'amb-verificar',
       categoria: 'ambiente',
-      nome: 'Verificar máquina',
-      subtitulo: ausentesCount > 0 ? `${ausentesCount} ferramenta(s) ausente(s)` : 'Ambiente OK',
-      acaoLabel: 'Inventário',
+      nome: pt.verificarMaquina,
+      subtitulo: ausentesCount > 0 ? pt.ferramentasAusentes(ausentesCount) : pt.ambienteOk,
+      acaoLabel: pt.inventario,
       status: ausentesCount > 0 ? 'warn' : 'ok',
       icon: 'wrench'
     })
@@ -90,9 +91,9 @@ export function ViewHoje({
     list.push({
       id: 'int-propostas',
       categoria: 'inteligencia',
-      nome: 'Propostas',
-      subtitulo: 'Autorizar ou recusar ações',
-      acaoLabel: 'Abrir caixa',
+      nome: pt.propostas,
+      subtitulo: pt.propostasSub,
+      acaoLabel: pt.abrirCaixa,
       status: 'idle',
       icon: 'spark'
     })
@@ -101,14 +102,17 @@ export function ViewHoje({
   }, [apps, pomodoroAtivo, ausentesCount, tarefasCount])
 
   const secoes = [
-    { titulo: 'Ferramentas', filtro: (n: OperacionalNodeData) => n.categoria === 'ferramenta' },
-    { titulo: 'Fluxo', filtro: (n: OperacionalNodeData) => n.categoria === 'fluxo' },
-    { titulo: 'Contexto & ambiente', filtro: (n: OperacionalNodeData) => n.categoria === 'contexto' || n.categoria === 'ambiente' },
-    { titulo: 'Inteligência', filtro: (n: OperacionalNodeData) => n.categoria === 'inteligencia' }
+    { titulo: pt.secFerramentas, filtro: (n: OperacionalNodeData) => n.categoria === 'ferramenta' },
+    { titulo: pt.secFluxo, filtro: (n: OperacionalNodeData) => n.categoria === 'fluxo' },
+    { titulo: pt.secContextoAmbiente, filtro: (n: OperacionalNodeData) => n.categoria === 'contexto' || n.categoria === 'ambiente' },
+    { titulo: pt.secInteligencia, filtro: (n: OperacionalNodeData) => n.categoria === 'inteligencia' }
   ]
 
   return (
     <div className="h-full overflow-y-auto p-6">
+      <div className="mb-6 px-4 py-3 rounded-lg border border-[var(--omni-border-active)] bg-[var(--omni-accent-focus)]/10 text-xs text-[var(--omni-text-muted)]">
+        <strong className="text-[var(--omni-text-primary)]">Como usar:</strong> {pt.dicaUso}
+      </div>
       {secoes.map((sec) => {
         const items = nodes.filter(sec.filtro)
         if (items.length === 0) return null
