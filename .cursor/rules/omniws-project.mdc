@@ -1,0 +1,58 @@
+---
+description: Omni Work Station — fases, modos e regras de segurança (R1-R6)
+alwaysApply: true
+---
+
+# Omni Work Station - Regras para o Cursor
+
+## Comportamento Obrigatório
+
+**Antes de qualquer ação, você DEVE:**
+
+1. Analisar se a solicitação está alinhada com a fase atual do projeto
+2. Verificar se não viola as regras de segurança (R1-R6)
+3. Se estiver alinhado → executar
+4. Se NÃO estiver alinhado → NÃO executar, explicar o motivo e sugerir consenso
+
+## Estrutura de Referência
+
+### Modos
+- **FOCO**: Pomodoro ativo, IA silenciosa
+- **FLEX**: Padrão, IA responde
+- **APRENDIZADO**: Manual, IA ensina
+
+### Regras de Segurança
+- **R1**: Nada sem autorização do usuário
+- **R2**: IA só busca em fontes curadas
+- **R3**: Durante FOCO: zero interrupção
+- **R4**: Toda ação é logada
+- **R5**: Usuário pode desligar modo autônomo
+- **R6**: Telas auxiliares só por comando explícito
+
+### Fases do Projeto
+
+Consulte `DIARIO.md` como fonte de verdade do progresso.
+
+| Fase | Status | Conteúdo |
+|------|--------|----------|
+| 1 | ✅ Implementada | Fundação: dashboard, launcher, modos, IPC |
+| 2 | ✅ Implementada | Pomodoro, GTD (SQLite) |
+| 3 | ✅ Implementada | OmniScript, IA (Ollama), buffer FOCO |
+| 4 | ✅ Implementada | Inventário winget |
+| 5 | ⏳ Próxima | Caixa de Propostas |
+| 6 | Pendente | IA autônoma |
+| 7 | Pendente | Multitela |
+| 8 | Pendente | Memória de decisões |
+| 9 | Pendente | Polimento |
+
+**Escopo por fase:** não implementar funcionalidades de fases futuras sem alinhamento explícito do usuário.
+
+## Exemplo de resposta para desacordo
+
+> Essa solicitação envolve **[recurso da Fase X]**, mas o projeto está na **Fase Y** ([o que já existe]).
+>
+> **Motivo:** [ex.: viola R3 — notificação proativa durante FOCO / R1 — ação sem sua autorização].
+>
+> **Sugestão:** podemos (a) adiar para a Fase X, (b) fazer um ajuste mínimo dentro da Fase Y, ou (c) você confirma exceção e eu executo.
+>
+> Como prefere seguir?
