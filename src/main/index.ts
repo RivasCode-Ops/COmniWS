@@ -4,6 +4,7 @@ import { exec } from 'child_process'
 import { promisify } from 'util'
 import Database from 'better-sqlite3'
 import axios from 'axios'
+import { iniciarSondagem, pararSondagem, executarSondagem, atualizarJanelaSondagem } from './sondagem'
 
 const execPromise = promisify(exec)
 
@@ -12,6 +13,7 @@ let db: Database.Database
 
 // Buffer de anotações durante FOCO
 let bufferAnotacoes: string[] = []
+let sondagemAtiva = true
 
 // Inicializar banco de dados
 function initDatabase() {
@@ -197,7 +199,10 @@ function createWindow() {
 
   mainWindow.on('closed', () => {
     mainWindow = null
+    atualizarJanelaSondagem(null)
   })
+
+  atualizarJanelaSondagem(mainWindow)
 }
 
 ipcMain.handle('get-estado', () => {
@@ -498,9 +503,39 @@ ipcMain.handle('abrir-site', async (_, url: string) => {
   }
 })
 
+ipcMain.handle('sondagem-status', () => {
+  return { ativa: sondagemAtiva }
+})
+
+ipcMain.handle('sondagem-toggle', () => {
+  sondagemAtiva = !sondagemAtiva
+  if (!sondagemAtiva) {
+    pararSondagem()
+  } else {
+    iniciarSondagem(db, mainWindow, (mensagem: string) => {
+      if (mainWindow) {
+        mainWindow.webContents.send('ia-stream', mensagem)
+      }
+    })
+  }
+  return { ativa: sondagemAtiva }
+})
+
+ipcMain.handle('sondagem-executar-agora', async () => {
+  await executarSondagem()
+  return { sucesso: true }
+})
+
 app.whenReady().then(() => {
   initDatabase()
   createWindow()
+  if (sondagemAtiva) {
+    iniciarSondagem(db, mainWindow, (mensagem: string) => {
+      if (mainWindow) {
+        mainWindow.webContents.send('ia-stream', mensagem)
+      }
+    })
+  }
 })
 
 app.on('window-all-closed', () => {

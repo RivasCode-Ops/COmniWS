@@ -1,6 +1,6 @@
 {
   "name": "omniws",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Omni Work Station - Estação de trabalho local com IA regenerativa",
   "main": "out/main/index.js",
   "author": "Omni-Dev",
@@ -16,12 +16,15 @@
     "axios": "^1.6.7",
     "better-sqlite3": "^9.4.3",
     "electron-updater": "^6.1.7",
+    "node-schedule": "^2.1.1",
+    "rss-parser": "^3.13.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.9",
     "@types/node": "^20.11.0",
+    "@types/node-schedule": "^2.1.7",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "@vitejs/plugin-react": "^4.2.1",

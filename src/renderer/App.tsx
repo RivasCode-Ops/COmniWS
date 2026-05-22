@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { CaixaPropostas } from './components/CaixaPropostas'
+import { StreamPensamento } from './components/StreamPensamento'
 
 interface Estado {
   modo: 'FOCO' | 'FLEX' | 'APRENDIZADO'
@@ -53,6 +54,7 @@ function App() {
   const [inventario, setInventario] = useState<Inventario | null>(null)
   const [carregandoInventario, setCarregandoInventario] = useState(false)
   const [mostrarCaixaPropostas, setMostrarCaixaPropostas] = useState(false)
+  const [mostrarStream, setMostrarStream] = useState(false)
 
   const carregarTarefas = async () => {
     const lista = await window.electronAPI.tarefasListar()
@@ -253,6 +255,12 @@ function App() {
             className={`px-3 py-1 rounded transition ${mostrarCaixaPropostas ? 'bg-blue-600' : 'bg-gray-700'}`}
           >
             📦 Propostas
+          </button>
+          <button
+            onClick={() => setMostrarStream(!mostrarStream)}
+            className={`px-3 py-1 rounded transition ${mostrarStream ? 'bg-purple-600' : 'bg-gray-700'}`}
+          >
+            🧠 Acompanhar IA
           </button>
           <button
             onClick={() => window.electronAPI.setModo('FLEX')}
@@ -563,6 +571,10 @@ function App() {
           </div>
         )}
       </main>
+
+      {mostrarStream && (
+        <StreamPensamento visivel={mostrarStream} onClose={() => setMostrarStream(false)} />
+      )}
     </div>
   )
 }

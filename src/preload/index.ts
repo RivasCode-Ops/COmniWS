@@ -54,6 +54,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   ambienteSugerirInstalacao: (appId: string, appNome: string) =>
     ipcRenderer.invoke('ambiente-sugerir-instalacao', appId, appNome),
 
+  // Sondagem IA
+  onIaStream: (callback: (mensagem: string) => void) => {
+    const handler = (_: unknown, mensagem: string) => callback(mensagem)
+    ipcRenderer.on('ia-stream', handler)
+    return () => ipcRenderer.removeListener('ia-stream', handler)
+  },
+  sondagemStatus: () => ipcRenderer.invoke('sondagem-status'),
+  sondagemToggle: () => ipcRenderer.invoke('sondagem-toggle'),
+  sondagemExecutarAgora: () => ipcRenderer.invoke('sondagem-executar-agora'),
+
   // Launcher
   abrirApp: (path: string) => ipcRenderer.invoke('abrir-app', path),
   abrirSite: (url: string) => ipcRenderer.invoke('abrir-site', url)
@@ -119,6 +129,10 @@ declare global {
         appId: string,
         appNome: string
       ) => Promise<{ sucesso: boolean; propostaId: number }>
+      onIaStream: (callback: (mensagem: string) => void) => () => void
+      sondagemStatus: () => Promise<{ ativa: boolean }>
+      sondagemToggle: () => Promise<{ ativa: boolean }>
+      sondagemExecutarAgora: () => Promise<{ sucesso: boolean }>
       abrirApp: (path: string) => Promise<{ sucesso: boolean; erro?: string }>
       abrirSite: (url: string) => Promise<{ sucesso: boolean; erro?: string }>
     }

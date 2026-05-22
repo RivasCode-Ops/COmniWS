@@ -51,10 +51,16 @@
 - [x] Log de ações visível
 - [x] Regras R1-R4 implementadas (nada sem autorização)
 
-## Fase 6 - Pendente
-- [ ] IA autônoma com sondagem
-- [ ] Fontes curadas (RSS/Atom)
-- [ ] Stream de pensamento
+## Fase 6 - IA Autônoma (Sondagem) (CONCLUÍDA ✅)
+- [x] Agendador node-schedule (a cada 4 horas)
+- [x] Fontes curadas (5 feeds RSS/Atom)
+- [x] Verificação de atualizações via winget
+- [x] Stream de pensamento em tempo real
+- [x] Geração automática de propostas
+- [x] Botão "Acompanhar IA" no header
+- [x] Modal com stream de pensamento
+- [x] Controle: Pausar/Ativar sondagem
+- [x] Execução manual imediata
 
 ## Fase 7 - Pendente
 - [ ] Multitela com sincronização
@@ -66,4 +72,4 @@
 - [ ] Polimento final
 
 ## Progresso
-Fase 1: 100% | Fase 2: 100% | Fase 3: 100% | Fase 4: 100% | Fase 5: 100% | Demais: 0%
+Fase 1: 100% | Fase 2: 100% | Fase 3: 100% | Fase 4: 100% | Fase 5: 100% | Fase 6: 100% | Demais: 0%
