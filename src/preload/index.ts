@@ -64,6 +64,28 @@ contextBridge.exposeInMainWorld('electronAPI', {
   sondagemToggle: () => ipcRenderer.invoke('sondagem-toggle'),
   sondagemExecutarAgora: () => ipcRenderer.invoke('sondagem-executar-agora'),
 
+  // Multitela
+  multitelaAbrir: () => ipcRenderer.invoke('multitela-abrir'),
+  multitelaFechar: () => ipcRenderer.invoke('multitela-fechar'),
+  multitelaStatus: () => ipcRenderer.invoke('multitela-status'),
+  multitelaSyncSolicitar: () => ipcRenderer.invoke('multitela-sync-solicitar'),
+  multitelaFocarPrincipal: () => ipcRenderer.invoke('multitela-focar-principal'),
+  onMultitelaHeartbeat: (callback: (data: { timestamp: number }) => void) => {
+    const handler = (_: unknown, data: { timestamp: number }) => callback(data)
+    ipcRenderer.on('multitela-heartbeat', handler)
+    return () => ipcRenderer.removeListener('multitela-heartbeat', handler)
+  },
+  onMultitelaSyncCompleto: (callback: (data: { estado: unknown }) => void) => {
+    const handler = (_: unknown, data: { estado: unknown }) => callback(data)
+    ipcRenderer.on('multitela-sync-completo', handler)
+    return () => ipcRenderer.removeListener('multitela-sync-completo', handler)
+  },
+  onMultitelaStatus: (callback: (data: unknown) => void) => {
+    const handler = (_: unknown, data: unknown) => callback(data)
+    ipcRenderer.on('multitela-status', handler)
+    return () => ipcRenderer.removeListener('multitela-status', handler)
+  },
+
   // Launcher
   abrirApp: (path: string) => ipcRenderer.invoke('abrir-app', path),
   abrirSite: (url: string) => ipcRenderer.invoke('abrir-site', url)
@@ -133,6 +155,19 @@ declare global {
       sondagemStatus: () => Promise<{ ativa: boolean }>
       sondagemToggle: () => Promise<{ ativa: boolean }>
       sondagemExecutarAgora: () => Promise<{ sucesso: boolean }>
+      multitelaAbrir: () => Promise<{ sucesso: boolean; jaAberta?: boolean }>
+      multitelaFechar: () => Promise<{ sucesso: boolean; motivo?: string }>
+      multitelaStatus: () => Promise<{
+        principalAberta: boolean
+        auxiliarAberta: boolean
+        janelas: number
+        sincronizada: boolean
+      }>
+      multitelaSyncSolicitar: () => Promise<{ estado: unknown; timestamp: number }>
+      multitelaFocarPrincipal: () => Promise<{ sucesso: boolean }>
+      onMultitelaHeartbeat: (callback: (data: { timestamp: number }) => void) => () => void
+      onMultitelaSyncCompleto: (callback: (data: { estado: unknown }) => void) => () => void
+      onMultitelaStatus: (callback: (data: unknown) => void) => () => void
       abrirApp: (path: string) => Promise<{ sucesso: boolean; erro?: string }>
       abrirSite: (url: string) => Promise<{ sucesso: boolean; erro?: string }>
     }

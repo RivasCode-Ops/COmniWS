@@ -62,8 +62,14 @@
 - [x] Controle: Pausar/Ativar sondagem
 - [x] Execução manual imediata
 
-## Fase 7 - Pendente
-- [ ] Multitela com sincronização
+## Fase 7 - Multitela Sincronizada (CONCLUÍDA ✅)
+- [x] Segunda janela (tela auxiliar) via comando explícito (R6)
+- [x] Broadcast IPC para todas as janelas
+- [x] Sincronização de estado (modo, Pomodoro, tarefa)
+- [x] Heartbeat a cada 2s com indicador de conexão
+- [x] Sync completo ao abrir auxiliar
+- [x] Tela auxiliar: timer grande + modo + tarefa
+- [x] Botão voltar para janela principal
 
 ## Fase 8 - Pendente
 - [ ] Memória de decisões
@@ -72,4 +78,4 @@
 - [ ] Polimento final
 
 ## Progresso
-Fase 1: 100% | Fase 2: 100% | Fase 3: 100% | Fase 4: 100% | Fase 5: 100% | Fase 6: 100% | Demais: 0%
+Fase 1: 100% | Fase 2: 100% | Fase 3: 100% | Fase 4: 100% | Fase 5: 100% | Fase 6: 100% | Fase 7: 100% | Demais: 0%

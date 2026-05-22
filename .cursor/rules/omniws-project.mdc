@@ -41,8 +41,8 @@ Consulte `DIARIO.md` como fonte de verdade do progresso.
 | 4 | ✅ Implementada | Inventário winget |
 | 5 | ✅ Implementada | Caixa de Propostas, audit_log |
 | 6 | ✅ Implementada | IA autônoma, RSS, stream |
-| 7 | ⏳ Próxima | Multitela |
-| 8 | Pendente | Memória de decisões |
+| 7 | ✅ Implementada | Multitela sincronizada |
+| 8 | ⏳ Próxima | Memória de decisões |
 | 9 | Pendente | Polimento |
 
 **Escopo por fase:** não implementar funcionalidades de fases futuras sem alinhamento explícito do usuário.

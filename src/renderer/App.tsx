@@ -55,6 +55,7 @@ function App() {
   const [carregandoInventario, setCarregandoInventario] = useState(false)
   const [mostrarCaixaPropostas, setMostrarCaixaPropostas] = useState(false)
   const [mostrarStream, setMostrarStream] = useState(false)
+  const [auxiliarAberta, setAuxiliarAberta] = useState(false)
 
   const carregarTarefas = async () => {
     const lista = await window.electronAPI.tarefasListar()
@@ -107,9 +108,31 @@ function App() {
       }
       setMensagemNotificacao('')
     })
+    window.electronAPI.multitelaStatus().then((s) => setAuxiliarAberta(s.auxiliarAberta))
+    window.electronAPI.onMultitelaStatus((data) => {
+      const status = data as { auxiliarAberta?: boolean }
+      if (status.auxiliarAberta !== undefined) {
+        setAuxiliarAberta(status.auxiliarAberta)
+      }
+    })
+
     carregarTarefas()
     carregarHistoricoIA()
   }, [])
+
+  const abrirSegundaTela = async () => {
+    const result = await window.electronAPI.multitelaAbrir()
+    if (result.sucesso) {
+      setAuxiliarAberta(true)
+      setMensagemNotificacao('🖥️ Segunda tela aberta (R6: comando explícito)')
+      setTimeout(() => setMensagemNotificacao(''), 3000)
+    }
+  }
+
+  const fecharSegundaTela = async () => {
+    await window.electronAPI.multitelaFechar()
+    setAuxiliarAberta(false)
+  }
 
   useEffect(() => {
     if (estado.modo !== 'FOCO') {
@@ -261,6 +284,13 @@ function App() {
             className={`px-3 py-1 rounded transition ${mostrarStream ? 'bg-purple-600' : 'bg-gray-700'}`}
           >
             🧠 Acompanhar IA
+          </button>
+          <button
+            onClick={auxiliarAberta ? fecharSegundaTela : abrirSegundaTela}
+            className={`px-3 py-1 rounded transition ${auxiliarAberta ? 'bg-cyan-600' : 'bg-gray-700'}`}
+            title="R6: segunda tela só por comando explícito"
+          >
+            🖥️ {auxiliarAberta ? 'Fechar 2ª tela' : 'Segunda Tela'}
           </button>
           <button
             onClick={() => window.electronAPI.setModo('FLEX')}

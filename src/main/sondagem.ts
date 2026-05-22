@@ -1,12 +1,11 @@
-import type { BrowserWindow } from 'electron'
 import type Database from 'better-sqlite3'
 import schedule from 'node-schedule'
 import Parser from 'rss-parser'
+import { broadcast } from './broadcast'
 
 const parser = new Parser()
 
 let db: Database.Database
-let mainWindow: BrowserWindow | null = null
 let streamCallback: ((mensagem: string) => void) | null = null
 let sondagemJob: schedule.Job | null = null
 let startupTimeout: NodeJS.Timeout | null = null
@@ -20,13 +19,8 @@ const FONTES_CURADAS = [
   { nome: 'VS Code Updates', url: 'https://code.visualstudio.com/feed.xml', tipo: 'updates' }
 ]
 
-export function iniciarSondagem(
-  _db: Database.Database,
-  _mainWindow: BrowserWindow | null,
-  onStream?: (mensagem: string) => void
-) {
+export function iniciarSondagem(_db: Database.Database, onStream?: (mensagem: string) => void) {
   db = _db
-  mainWindow = _mainWindow
   streamCallback = onStream || null
 
   if (sondagemJob) return
@@ -44,9 +38,7 @@ function adicionarStream(mensagem: string) {
   if (streamCallback) {
     streamCallback(mensagem)
   }
-  if (mainWindow) {
-    mainWindow.webContents.send('ia-stream', mensagem)
-  }
+  broadcast('ia-stream', mensagem)
   console.log(`[IA Sondagem] ${mensagem}`)
 }
 
@@ -118,13 +110,11 @@ function criarProposta(
   `)
   const result = stmt.run(titulo, descricao, tipo, acao, JSON.stringify(dados))
 
-  if (mainWindow) {
-    mainWindow.webContents.send('nova-proposta', {
-      id: result.lastInsertRowid,
-      titulo,
-      descricao
-    })
-  }
+  broadcast('nova-proposta', {
+    id: result.lastInsertRowid,
+    titulo,
+    descricao
+  })
 
   return result.lastInsertRowid
 }
@@ -176,8 +166,4 @@ export function pararSondagem() {
     startupTimeout = null
   }
   adicionarStream('🛑 IA Autônoma desligada pelo usuário.')
-}
-
-export function atualizarJanelaSondagem(win: BrowserWindow | null) {
-  mainWindow = win
 }

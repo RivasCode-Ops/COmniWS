@@ -4,11 +4,14 @@ import { exec } from 'child_process'
 import { promisify } from 'util'
 import Database from 'better-sqlite3'
 import axios from 'axios'
-import { iniciarSondagem, pararSondagem, executarSondagem, atualizarJanelaSondagem } from './sondagem'
+import { iniciarSondagem, pararSondagem, executarSondagem } from './sondagem'
+import { broadcast, registrarJanela, quantidadeJanelas } from './broadcast'
 
 const execPromise = promisify(exec)
 
 let mainWindow: BrowserWindow | null = null
+let auxWindow: BrowserWindow | null = null
+let heartbeatInterval: NodeJS.Timeout | null = null
 let db: Database.Database
 
 // Buffer de anotações durante FOCO
@@ -101,9 +104,7 @@ function iniciarTimer() {
     if (estadoAtual.pomodoroAtivo && estadoAtual.tempoRestante > 0) {
       estadoAtual.tempoRestante--
 
-      if (mainWindow) {
-        mainWindow.webContents.send('estado-atualizado', estadoAtual)
-      }
+      broadcast('estado-atualizado', estadoAtual)
 
       if (estadoAtual.tempoRestante === 0) {
         estadoAtual.pomodoroAtivo = false
@@ -113,15 +114,11 @@ function iniciarTimer() {
         if (bufferAnotacoes.length > 0) {
           const anotacoes = [...bufferAnotacoes]
           bufferAnotacoes = []
-          if (mainWindow) {
-            mainWindow.webContents.send('processar-buffer', anotacoes)
-          }
+          broadcast('processar-buffer', anotacoes)
         }
 
-        if (mainWindow) {
-          mainWindow.webContents.send('pomodoro-terminado')
-          mainWindow.webContents.send('estado-atualizado', estadoAtual)
-        }
+        broadcast('pomodoro-terminado')
+        broadcast('estado-atualizado', estadoAtual)
       }
     }
   }, 1000)
@@ -176,13 +173,29 @@ const FERRAMENTAS_DESEJADAS = [
   { nome: 'Supabase CLI', id: 'Supabase.Supabase' }
 ]
 
-function createWindow() {
+function urlRenderer(view?: 'auxiliar') {
+  const base =
+    process.env.ELECTRON_RENDERER_URL ||
+    (process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : '')
+  if (view === 'auxiliar') {
+    return base ? `${base}?view=auxiliar` : join(__dirname, '../renderer/index.html')
+  }
+  return base || join(__dirname, '../renderer/index.html')
+}
+
+function sincronizarTodasJanelas() {
+  broadcast('multitela-sync-completo', { estado: estadoAtual })
+  broadcast('estado-atualizado', estadoAtual)
+}
+
+function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     minWidth: 800,
     minHeight: 600,
     frame: true,
+    title: 'Omni Work Station',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -190,19 +203,78 @@ function createWindow() {
     }
   })
 
-  if (process.env.NODE_ENV === 'development') {
-    mainWindow.loadURL('http://localhost:5173')
-    mainWindow.webContents.openDevTools()
+  registrarJanela(mainWindow)
+
+  const renderer = urlRenderer()
+  if (typeof renderer === 'string' && renderer.startsWith('http')) {
+    mainWindow.loadURL(renderer)
+    if (process.env.NODE_ENV === 'development') {
+      mainWindow.webContents.openDevTools()
+    }
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    mainWindow.loadFile(renderer as string)
   }
 
   mainWindow.on('closed', () => {
+    if (auxWindow && !auxWindow.isDestroyed()) {
+      auxWindow.close()
+    }
     mainWindow = null
-    atualizarJanelaSondagem(null)
+  })
+}
+
+function createAuxWindow() {
+  if (auxWindow && !auxWindow.isDestroyed()) {
+    auxWindow.focus()
+    return { sucesso: true, jaAberta: true }
+  }
+
+  auxWindow = new BrowserWindow({
+    width: 420,
+    height: 640,
+    minWidth: 360,
+    minHeight: 480,
+    title: 'OmniWS — Tela Auxiliar',
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      contextIsolation: true,
+      nodeIntegration: false
+    }
   })
 
-  atualizarJanelaSondagem(mainWindow)
+  registrarJanela(auxWindow)
+
+  const renderer = urlRenderer('auxiliar')
+  if (typeof renderer === 'string' && renderer.startsWith('http')) {
+    auxWindow.loadURL(renderer)
+  } else {
+    auxWindow.loadFile(renderer as string, { query: { view: 'auxiliar' } })
+  }
+
+  auxWindow.on('closed', () => {
+    auxWindow = null
+    broadcast('multitela-status', {
+      auxiliarAberta: false,
+      janelas: quantidadeJanelas()
+    })
+  })
+
+  auxWindow.webContents.once('did-finish-load', () => {
+    sincronizarTodasJanelas()
+    broadcast('multitela-status', {
+      auxiliarAberta: true,
+      janelas: quantidadeJanelas()
+    })
+  })
+
+  return { sucesso: true, jaAberta: false }
+}
+
+function iniciarHeartbeat() {
+  if (heartbeatInterval) return
+  heartbeatInterval = setInterval(() => {
+    broadcast('multitela-heartbeat', { timestamp: Date.now() })
+  }, 2000)
 }
 
 ipcMain.handle('get-estado', () => {
@@ -211,9 +283,7 @@ ipcMain.handle('get-estado', () => {
 
 ipcMain.handle('set-modo', (_, modo: 'FOCO' | 'FLEX' | 'APRENDIZADO') => {
   estadoAtual.modo = modo
-  if (mainWindow) {
-    mainWindow.webContents.send('estado-atualizado', estadoAtual)
-  }
+  broadcast('estado-atualizado', estadoAtual)
   return estadoAtual
 })
 
@@ -228,9 +298,7 @@ ipcMain.handle('pomodoro-iniciar', async (_, tarefaId?: number, tarefaTitulo?: s
 
   iniciarTimer()
 
-  if (mainWindow) {
-    mainWindow.webContents.send('estado-atualizado', estadoAtual)
-  }
+  broadcast('estado-atualizado', estadoAtual)
 
   return { sucesso: true }
 })
@@ -242,7 +310,7 @@ ipcMain.handle('pomodoro-pausar', () => {
   limparTimer()
 
   if (mainWindow) {
-    mainWindow.webContents.send('estado-atualizado', estadoAtual)
+    broadcast('estado-atualizado', estadoAtual)
   }
 
   return { sucesso: true }
@@ -253,9 +321,7 @@ ipcMain.handle('pomodoro-resetar', () => {
   estadoAtual.tempoRestante = 25 * 60
   limparTimer()
 
-  if (mainWindow) {
-    mainWindow.webContents.send('estado-atualizado', estadoAtual)
-  }
+  broadcast('estado-atualizado', estadoAtual)
 
   return { sucesso: true }
 })
@@ -366,13 +432,11 @@ ipcMain.handle(
       'pendente'
     )
 
-    if (mainWindow) {
-      mainWindow.webContents.send('nova-proposta', {
-        id: result.lastInsertRowid,
-        titulo,
-        descricao
-      })
-    }
+    broadcast('nova-proposta', {
+      id: result.lastInsertRowid,
+      titulo,
+      descricao
+    })
 
     return { id: result.lastInsertRowid }
   }
@@ -406,9 +470,7 @@ ipcMain.handle('propostas-autorizar', async (_, id: number) => {
     }
   }
 
-  if (mainWindow) {
-    mainWindow.webContents.send('proposta-atualizada', { id, status: 'autorizada' })
-  }
+  broadcast('proposta-atualizada', { id, status: 'autorizada' })
 
   return { sucesso: true, ...resultado }
 })
@@ -429,9 +491,7 @@ ipcMain.handle('propostas-recusar', (_, id: number, paraSempre: boolean = false)
     'sucesso'
   )
 
-  if (mainWindow) {
-    mainWindow.webContents.send('proposta-atualizada', { id, status })
-  }
+  broadcast('proposta-atualizada', { id, status })
 
   return { sucesso: true }
 })
@@ -445,9 +505,7 @@ ipcMain.handle('propostas-agendar', (_, id: number, dataHora: string) => {
   )
   logStmt.run('agendar', 'proposta', id, JSON.stringify({ agendadoPara: dataHora }), 'sucesso')
 
-  if (mainWindow) {
-    mainWindow.webContents.send('proposta-atualizada', { id, status: 'agendado' })
-  }
+  broadcast('proposta-atualizada', { id, status: 'agendado' })
 
   return { sucesso: true }
 })
@@ -474,13 +532,11 @@ ipcMain.handle('ambiente-sugerir-instalacao', (_, appId: string, appNome: string
     'pendente'
   )
 
-  if (mainWindow) {
-    mainWindow.webContents.send('nova-proposta', {
-      id: result.lastInsertRowid,
-      titulo,
-      descricao
-    })
-  }
+  broadcast('nova-proposta', {
+    id: result.lastInsertRowid,
+    titulo,
+    descricao
+  })
 
   return { sucesso: true, propostaId: result.lastInsertRowid }
 })
@@ -512,11 +568,7 @@ ipcMain.handle('sondagem-toggle', () => {
   if (!sondagemAtiva) {
     pararSondagem()
   } else {
-    iniciarSondagem(db, mainWindow, (mensagem: string) => {
-      if (mainWindow) {
-        mainWindow.webContents.send('ia-stream', mensagem)
-      }
-    })
+    iniciarSondagem(db, (mensagem: string) => broadcast('ia-stream', mensagem))
   }
   return { ativa: sondagemAtiva }
 })
@@ -526,20 +578,51 @@ ipcMain.handle('sondagem-executar-agora', async () => {
   return { sucesso: true }
 })
 
+ipcMain.handle('multitela-abrir', () => createAuxWindow())
+
+ipcMain.handle('multitela-fechar', () => {
+  if (auxWindow && !auxWindow.isDestroyed()) {
+    auxWindow.close()
+    return { sucesso: true }
+  }
+  return { sucesso: false, motivo: 'Auxiliar nao aberta' }
+})
+
+ipcMain.handle('multitela-status', () => ({
+  principalAberta: mainWindow !== null && !mainWindow.isDestroyed(),
+  auxiliarAberta: auxWindow !== null && !auxWindow.isDestroyed(),
+  janelas: quantidadeJanelas(),
+  sincronizada: quantidadeJanelas() > 0
+}))
+
+ipcMain.handle('multitela-sync-solicitar', () => ({
+  estado: estadoAtual,
+  timestamp: Date.now()
+}))
+
+ipcMain.handle('multitela-focar-principal', () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.focus()
+    return { sucesso: true }
+  }
+  return { sucesso: false }
+})
+
 app.whenReady().then(() => {
   initDatabase()
-  createWindow()
+  createMainWindow()
+  iniciarHeartbeat()
   if (sondagemAtiva) {
-    iniciarSondagem(db, mainWindow, (mensagem: string) => {
-      if (mainWindow) {
-        mainWindow.webContents.send('ia-stream', mensagem)
-      }
-    })
+    iniciarSondagem(db, (mensagem: string) => broadcast('ia-stream', mensagem))
   }
 })
 
 app.on('window-all-closed', () => {
   limparTimer()
+  if (heartbeatInterval) {
+    clearInterval(heartbeatInterval)
+    heartbeatInterval = null
+  }
   if (process.platform !== 'darwin') {
     app.quit()
   }
