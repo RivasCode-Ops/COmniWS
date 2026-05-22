@@ -42,8 +42,8 @@ Consulte `DIARIO.md` como fonte de verdade do progresso.
 | 5 | ✅ Implementada | Caixa de Propostas, audit_log |
 | 6 | ✅ Implementada | IA autônoma, RSS, stream |
 | 7 | ✅ Implementada | Multitela sincronizada |
-| 8 | ⏳ Próxima | Memória de decisões |
-| 9 | Pendente | Polimento |
+| 8 | ✅ Implementada | Memória de decisões |
+| 9 | ✅ Implementada | Polimento, instalador, 10/10 |
 
 **Escopo por fase:** não implementar funcionalidades de fases futuras sem alinhamento explícito do usuário.
 

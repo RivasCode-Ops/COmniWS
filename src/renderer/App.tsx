@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { CaixaPropostas } from './components/CaixaPropostas'
 import { StreamPensamento } from './components/StreamPensamento'
+import { TemaToggle } from './components/TemaToggle'
+import { useAtalhosTeclado } from './components/AtalhosTeclado'
+import { VerificadorRequisitos } from './components/VerificadorRequisitos'
 
 interface Estado {
   modo: 'FOCO' | 'FLEX' | 'APRENDIZADO'
@@ -56,6 +59,8 @@ function App() {
   const [mostrarCaixaPropostas, setMostrarCaixaPropostas] = useState(false)
   const [mostrarStream, setMostrarStream] = useState(false)
   const [auxiliarAberta, setAuxiliarAberta] = useState(false)
+  const [mostrarVerificador, setMostrarVerificador] = useState(false)
+  const omniscriptRef = useRef<HTMLInputElement>(null)
 
   const carregarTarefas = async () => {
     const lista = await window.electronAPI.tarefasListar()
@@ -133,6 +138,14 @@ function App() {
     await window.electronAPI.multitelaFechar()
     setAuxiliarAberta(false)
   }
+
+  useAtalhosTeclado({
+    onOmniScript: () => omniscriptRef.current?.focus(),
+    onPropostas: () => setMostrarCaixaPropostas((v) => !v),
+    onModoFoco: () => window.electronAPI.setModo('FOCO'),
+    onModoFlex: () => window.electronAPI.setModo('FLEX'),
+    onModoAprendizado: () => window.electronAPI.setModo('APRENDIZADO')
+  })
 
   useEffect(() => {
     if (estado.modo !== 'FOCO') {
@@ -257,7 +270,7 @@ function App() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-white transition-colors">
       {mensagemNotificacao && (
         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-pulse">
           {mensagemNotificacao}
@@ -304,6 +317,14 @@ function App() {
           >
             APRENDIZADO
           </button>
+          <TemaToggle />
+          <button
+            onClick={() => setMostrarVerificador(true)}
+            className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition"
+            title="Verificar requisitos"
+          >
+            🔧
+          </button>
         </div>
       </header>
 
@@ -315,7 +336,7 @@ function App() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="bg-gray-800 rounded-lg p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm dark:shadow-none border border-gray-200 dark:border-transparent">
             <h2 className="text-xl font-semibold mb-4">⏱️ Pomodoro</h2>
             <div className="text-center">
               <div className="text-7xl font-mono font-bold mb-6">
@@ -468,6 +489,8 @@ function App() {
 
             <div className="flex gap-2">
               <input
+                id="omniscript-input"
+                ref={omniscriptRef}
                 type="text"
                 value={inputOmniScript}
                 onChange={(e) => setInputOmniScript(e.target.value)}
@@ -604,6 +627,10 @@ function App() {
 
       {mostrarStream && (
         <StreamPensamento visivel={mostrarStream} onClose={() => setMostrarStream(false)} />
+      )}
+
+      {mostrarVerificador && (
+        <VerificadorRequisitos onFechar={() => setMostrarVerificador(false)} />
       )}
     </div>
   )

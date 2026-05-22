@@ -8,9 +8,9 @@
 | Item | Valor |
 |------|--------|
 | Commit atual | (ver `git log -1`) |
-| Versão | `0.6.0` |
-| Fases concluídas | 1–7 |
-| Próxima fase | 8 — Memória de decisões |
+| Versão | `1.0.0` |
+| Fases concluídas | 1–9 (projeto completo) |
+| Próxima fase | — Manutenção / releases |
 | GitHub | Ainda não enviado (`git push -u origin master` pendente) |
 
 ## Procedimentos executados na suspensão

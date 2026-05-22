@@ -2,10 +2,14 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { join } from 'path'
 import { exec } from 'child_process'
 import { promisify } from 'util'
+import os from 'os'
 import Database from 'better-sqlite3'
 import axios from 'axios'
+import Store from 'electron-store'
 import { iniciarSondagem, pararSondagem, executarSondagem } from './sondagem'
 import { broadcast, registrarJanela, quantidadeJanelas } from './broadcast'
+import { criarTray, destruirTray } from './tray'
+import { setupLogger, logger } from './logger'
 
 const execPromise = promisify(exec)
 
@@ -17,6 +21,10 @@ let db: Database.Database
 // Buffer de anotações durante FOCO
 let bufferAnotacoes: string[] = []
 let sondagemAtiva = true
+
+const configStore = new Store<{ autoStart: boolean }>({
+  defaults: { autoStart: false }
+})
 
 // Inicializar banco de dados
 function initDatabase() {
@@ -216,10 +224,31 @@ function createMainWindow() {
   }
 
   mainWindow.on('closed', () => {
+    destruirTray()
     if (auxWindow && !auxWindow.isDestroyed()) {
       auxWindow.close()
     }
     mainWindow = null
+  })
+
+  mainWindow.once('ready-to-show', () => {
+    criarTray(mainWindow!, {
+      mostrarJanela: () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.show()
+          mainWindow.focus()
+        }
+      },
+      modoFoco: () => {
+        estadoAtual.modo = 'FOCO'
+        broadcast('estado-atualizado', estadoAtual)
+      },
+      modoFlex: () => {
+        estadoAtual.modo = 'FLEX'
+        broadcast('estado-atualizado', estadoAtual)
+      }
+    })
+    logger.info('Tray do sistema criado')
   })
 }
 
@@ -608,7 +637,55 @@ ipcMain.handle('multitela-focar-principal', () => {
   return { sucesso: false }
 })
 
+ipcMain.handle('requisitos-verificar', async () => {
+  const ramGb = os.totalmem() / 1024 ** 3
+  let wingetOk = false
+  try {
+    await execPromise('winget --version', { timeout: 5000 })
+    wingetOk = true
+  } catch {
+    wingetOk = false
+  }
+  let ollamaOk = false
+  try {
+    await axios.get('http://localhost:11434/api/tags', { timeout: 3000 })
+    ollamaOk = true
+  } catch {
+    ollamaOk = false
+  }
+  return {
+    ram: { ok: ramGb >= 4, valor: ramGb },
+    nodeJs: { ok: true },
+    winget: { ok: wingetOk },
+    ollama: { ok: ollamaOk }
+  }
+})
+
+ipcMain.handle('config-get', () => configStore.store)
+
+ipcMain.handle('config-auto-start', (_, enabled: boolean) => {
+  configStore.set('autoStart', enabled)
+  app.setLoginItemSettings({
+    openAtLogin: enabled,
+    name: 'Omni Work Station',
+    path: process.execPath
+  })
+  logger.info(`Auto-start: ${enabled}`)
+  return { sucesso: true, autoStart: enabled }
+})
+
 app.whenReady().then(() => {
+  setupLogger()
+  logger.info('Omni Work Station iniciada v1.0.0')
+
+  if (configStore.get('autoStart')) {
+    app.setLoginItemSettings({
+      openAtLogin: true,
+      name: 'Omni Work Station',
+      path: process.execPath
+    })
+  }
+
   initDatabase()
   createMainWindow()
   iniciarHeartbeat()

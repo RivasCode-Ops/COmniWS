@@ -86,6 +86,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => ipcRenderer.removeListener('multitela-status', handler)
   },
 
+  // Config e requisitos
+  requisitosVerificar: () => ipcRenderer.invoke('requisitos-verificar'),
+  configGet: () => ipcRenderer.invoke('config-get'),
+  configAutoStart: (enabled: boolean) => ipcRenderer.invoke('config-auto-start', enabled),
+
   // Launcher
   abrirApp: (path: string) => ipcRenderer.invoke('abrir-app', path),
   abrirSite: (url: string) => ipcRenderer.invoke('abrir-site', url)
@@ -168,6 +173,14 @@ declare global {
       onMultitelaHeartbeat: (callback: (data: { timestamp: number }) => void) => () => void
       onMultitelaSyncCompleto: (callback: (data: { estado: unknown }) => void) => () => void
       onMultitelaStatus: (callback: (data: unknown) => void) => () => void
+      requisitosVerificar: () => Promise<{
+        ram: { ok: boolean; valor: number }
+        nodeJs: { ok: boolean }
+        winget: { ok: boolean }
+        ollama: { ok: boolean }
+      }>
+      configGet: () => Promise<{ autoStart: boolean }>
+      configAutoStart: (enabled: boolean) => Promise<{ sucesso: boolean; autoStart: boolean }>
       abrirApp: (path: string) => Promise<{ sucesso: boolean; erro?: string }>
       abrirSite: (url: string) => Promise<{ sucesso: boolean; erro?: string }>
     }
