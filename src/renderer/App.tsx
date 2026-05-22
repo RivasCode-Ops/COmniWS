@@ -1,9 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { CaixaPropostas } from './components/CaixaPropostas'
 import { StreamPensamento } from './components/StreamPensamento'
 import { TemaToggle } from './components/TemaToggle'
 import { useAtalhosTeclado } from './components/AtalhosTeclado'
 import { VerificadorRequisitos } from './components/VerificadorRequisitos'
+import { Login } from './components/Login'
+import { LauncherCentral } from './components/LauncherCentral'
+import { NotasWidget } from './components/NotasWidget'
+
+type TelaApp = 'login' | 'launcher' | 'estacao'
+
+interface Sessao {
+  sessaoId: number
+  usuarioId: number
+  usuarioNome: string
+  workspaceId: number
+  workspaceNome: string
+}
 
 interface Estado {
   modo: 'FOCO' | 'FLEX' | 'APRENDIZADO'
@@ -36,6 +49,10 @@ interface Inventario {
 }
 
 function App() {
+  const [tela, setTela] = useState<TelaApp>('login')
+  const [sessao, setSessao] = useState<Sessao | null>(null)
+  const [fullscreen, setFullscreen] = useState(false)
+
   const [estado, setEstado] = useState<Estado>({
     modo: 'FLEX',
     pomodoroAtivo: false,
@@ -88,7 +105,24 @@ function App() {
     setCarregandoInventario(false)
   }
 
+  const irParaLogin = useCallback(() => {
+    setSessao(null)
+    setTela('login')
+  }, [])
+
   useEffect(() => {
+    window.electronAPI.authSessao().then((r) => {
+      if (r.sessao) {
+        setSessao(r.sessao as Sessao)
+        setTela('launcher')
+      }
+    })
+    window.electronAPI.estacaoGetFullscreen().then((r) => setFullscreen(r.fullscreen))
+    window.electronAPI.onAuthLogout(() => irParaLogin())
+  }, [irParaLogin])
+
+  useEffect(() => {
+    if (tela !== 'estacao') return
     window.electronAPI.getEstado().then((e) => setEstado(e as Estado))
     window.electronAPI.onEstadoAtualizado((e) => setEstado(e as Estado))
     window.electronAPI.onPomodoroTerminado(() => {
@@ -123,7 +157,7 @@ function App() {
 
     carregarTarefas()
     carregarHistoricoIA()
-  }, [])
+  }, [tela])
 
   const abrirSegundaTela = async () => {
     const result = await window.electronAPI.multitelaAbrir()
@@ -257,17 +291,44 @@ function App() {
     }
   }
 
-  const APPS_SUGERIDOS = [
-    {
-      nome: 'Cursor',
-      path: 'C:\\Users\\%USERNAME%\\AppData\\Local\\Programs\\cursor\\Cursor.exe',
-      tipo: 'app' as const
-    },
-    { nome: 'VS Code', path: 'code', tipo: 'app' as const },
-    { nome: 'GitHub', url: 'https://github.com', tipo: 'site' as const },
-    { nome: 'Supabase', url: 'https://supabase.com', tipo: 'site' as const },
-    { nome: 'Vercel', url: 'https://vercel.com', tipo: 'site' as const }
-  ]
+  const toggleFullscreen = async () => {
+    const next = !fullscreen
+    await window.electronAPI.estacaoSetFullscreen(next)
+    setFullscreen(next)
+  }
+
+  const handleLogout = async () => {
+    await window.electronAPI.authLogout()
+    irParaLogin()
+  }
+
+  if (tela === 'login') {
+    return (
+      <Login
+        onSuccess={() => {
+          window.electronAPI.authSessao().then((r) => {
+            if (r.sessao) setSessao(r.sessao as Sessao)
+            setTela('launcher')
+          })
+        }}
+      />
+    )
+  }
+
+  if (tela === 'launcher' && sessao) {
+    return (
+      <LauncherCentral
+        usuarioNome={sessao.usuarioNome}
+        workspaceNome={sessao.workspaceNome}
+        onEntrarEstacao={() => setTela('estacao')}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
+  if (tela !== 'estacao' || !sessao) {
+    return null
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-white transition-colors">
@@ -280,12 +341,28 @@ function App() {
       <header className="fixed top-0 left-0 right-0 h-16 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-6 z-10">
         <div className="flex items-center gap-4">
           <h1 className="text-xl font-bold">Omni Work Station</h1>
+          <span className="text-sm text-gray-400">
+            {sessao.usuarioNome} · {sessao.workspaceNome}
+          </span>
           <div className={`px-3 py-1 rounded-full text-sm font-semibold ${getModoCor()}`}>
             {getModoLabel()}
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap justify-end">
+          <button
+            onClick={() => setTela('launcher')}
+            className="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm"
+          >
+            🚀 Launcher
+          </button>
+          <button
+            onClick={toggleFullscreen}
+            className="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm"
+            title="Alternar tela cheia"
+          >
+            {fullscreen ? '🗗 Janela' : '⛶ Tela cheia'}
+          </button>
           <button
             onClick={() => setMostrarCaixaPropostas(!mostrarCaixaPropostas)}
             className={`px-3 py-1 rounded transition ${mostrarCaixaPropostas ? 'bg-blue-600' : 'bg-gray-700'}`}
@@ -324,6 +401,12 @@ function App() {
             title="Verificar requisitos"
           >
             🔧
+          </button>
+          <button
+            onClick={handleLogout}
+            className="px-3 py-1 rounded bg-red-800 hover:bg-red-700 text-sm"
+          >
+            Sair
           </button>
         </div>
       </header>
@@ -428,27 +511,7 @@ function App() {
             </div>
           </div>
 
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">🚀 Launcher Rápido</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {APPS_SUGERIDOS.map((item) => (
-                <button
-                  key={item.nome}
-                  onClick={() => {
-                    if (item.tipo === 'app') {
-                      const path = item.path.replace('%USERNAME%', '')
-                      window.electronAPI.abrirApp(path)
-                    } else {
-                      window.electronAPI.abrirSite(item.url!)
-                    }
-                  }}
-                  className="p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition text-center"
-                >
-                  {item.nome}
-                </button>
-              ))}
-            </div>
-          </div>
+          <NotasWidget modoFoco={estado.modo === 'FOCO'} tarefaAtualId={estado.tarefaAtualId} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">

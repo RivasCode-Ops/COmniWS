@@ -19,6 +19,17 @@ A ideia central: **a estação sugere; você decide.**
 
 ---
 
+## Primeiro acesso (v1.5)
+
+1. Abra o app — aparece a **tela de login**
+2. Na primeira vez: crie **nome do perfil** + **PIN** (mín. 4 caracteres)
+3. Nas próximas vezes: digite o PIN e entre
+4. Você verá o **Launcher central** — atalhos para apps/sites
+5. Clique **Entrar na estação** para GTD, Pomodoro, notas e propostas
+6. Use **⛶ Tela cheia** no topo (padrão após login) ou **🚀 Launcher** para voltar
+
+---
+
 ## Como abrir o app
 
 ### Opção A — Desenvolvimento (pasta do projeto)

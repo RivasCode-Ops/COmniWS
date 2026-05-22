@@ -2,7 +2,7 @@
 
 **Versão do documento:** 2.0  
 **Baseline de código:** 1.0.0  
-**Status:** v1.0.0 entregue; v1.5 em definição para fechar visão de estação  
+**Status:** v1.0.0 entregue; **v1.5 implementada** (Fase 10)  
 **Substitui como base oficial:** `Omni-Analyst .md.txt` (mantido só como histórico)  
 **Última revisão:** 2026-05-22  
 

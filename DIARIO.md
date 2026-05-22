@@ -19,8 +19,17 @@
 - **Oficial:** `docs/ESPECIFICACAO_OMNI_WORK_v2.md` (v1.0 entregue + v1.5 planejada)
 - **Diagnóstico:** `docs/DIAGNOSTICO_SPEC_v2.md`
 
+## Fase 10 - Estação v1.5 (CONCLUÍDA ✅)
+- [x] Tela de login local (perfil + PIN)
+- [x] Launcher central pós-login
+- [x] Fullscreen configurável (padrão após login)
+- [x] Widget de notas inteligentes (`notas` SQLite)
+- [x] Workspaces com apps JSON
+- [x] Executor winget pós-autorização + whitelist (`executor.ts`, `politicas.ts`)
+- [x] Sessões e entidades usuário no SQLite
+
 ## PROGRESSO FINAL
-████████████████████████████████████████ 100% (9/9 fases)
+████████████████████████████████████████ 100% (10/10 fases entrega v1.5)
 
 ## Certificação 10/10
 ✅ Regras de segurança R1-R6 implementadas

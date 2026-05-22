@@ -44,6 +44,7 @@ Consulte `DIARIO.md` como fonte de verdade do progresso.
 | 7 | ✅ Implementada | Multitela sincronizada |
 | 8 | ✅ Implementada | Memória de decisões |
 | 9 | ✅ Implementada | Polimento, instalador, 10/10 |
+| 10 | ✅ Implementada | v1.5: login, launcher central, fullscreen, notas, executor winget |
 
 **Escopo por fase:** não implementar funcionalidades de fases futuras sem alinhamento explícito do usuário.
 

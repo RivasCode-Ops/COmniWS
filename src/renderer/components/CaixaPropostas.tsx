@@ -59,8 +59,12 @@ export function CaixaPropostas({ onPropostaAcao }: CaixaPropostasProps) {
 
   const autorizar = async (id: number) => {
     const result = await window.electronAPI.propostasAutorizar(id)
-    if (result.comando) {
-      alert(`Para instalar, execute no terminal:\n${result.comando}`)
+    if (result.executado) {
+      alert(result.mensagem || (result.sucesso ? 'Ação executada.' : result.motivo || 'Falha'))
+    } else if (result.comando) {
+      alert(`${result.mensagem || 'Execute no terminal:'}\n${result.comando}`)
+    } else if (result.mensagem) {
+      alert(result.mensagem)
     }
     carregarPropostas()
     carregarAuditLog()

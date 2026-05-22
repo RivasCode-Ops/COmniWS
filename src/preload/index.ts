@@ -93,7 +93,38 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Launcher
   abrirApp: (path: string) => ipcRenderer.invoke('abrir-app', path),
-  abrirSite: (url: string) => ipcRenderer.invoke('abrir-site', url)
+  abrirSite: (url: string) => ipcRenderer.invoke('abrir-site', url),
+  launcherApps: () => ipcRenderer.invoke('launcher-apps'),
+
+  // Auth e sessão (Fase 10)
+  authPrecisaSetup: () => ipcRenderer.invoke('auth-precisa-setup'),
+  authSetup: (nome: string, pin: string) => ipcRenderer.invoke('auth-setup', nome, pin),
+  authLogin: (pin: string, nome?: string) => ipcRenderer.invoke('auth-login', pin, nome),
+  authLogout: () => ipcRenderer.invoke('auth-logout'),
+  authSessao: () => ipcRenderer.invoke('auth-sessao'),
+  onAuthSessao: (callback: (sessao: unknown) => void) => {
+    ipcRenderer.on('auth-sessao', (_, sessao) => callback(sessao))
+  },
+  onAuthLogout: (callback: () => void) => {
+    ipcRenderer.on('auth-logout', () => callback())
+  },
+
+  // Workspaces
+  workspacesListar: () => ipcRenderer.invoke('workspaces-listar'),
+  workspacesAtivar: (id: number) => ipcRenderer.invoke('workspaces-ativar', id),
+
+  // Notas
+  notasListar: () => ipcRenderer.invoke('notas-listar'),
+  notasAdicionar: (corpo: string, titulo?: string, tarefaId?: number) =>
+    ipcRenderer.invoke('notas-adicionar', corpo, titulo, tarefaId),
+  notasRemover: (id: number) => ipcRenderer.invoke('notas-remover', id),
+
+  // Estação fullscreen
+  estacaoSetFullscreen: (ativo: boolean) => ipcRenderer.invoke('estacao-set-fullscreen', ativo),
+  estacaoGetFullscreen: () => ipcRenderer.invoke('estacao-get-fullscreen'),
+
+  // Políticas
+  politicasGet: () => ipcRenderer.invoke('politicas-get')
 })
 
 declare global {
@@ -139,7 +170,13 @@ declare global {
       ) => Promise<{ id: number }>
       propostasAutorizar: (
         id: number
-      ) => Promise<{ sucesso: boolean; comando?: string; mensagem?: string; motivo?: string }>
+      ) => Promise<{
+        sucesso: boolean
+        comando?: string
+        mensagem?: string
+        executado?: boolean
+        motivo?: string
+      }>
       propostasRecusar: (id: number, paraSempre: boolean) => Promise<{ sucesso: boolean }>
       propostasAgendar: (id: number, dataHora: string) => Promise<{ sucesso: boolean }>
       onNovaProposta: (callback: (proposta: { id: number; titulo: string; descricao: string }) => void) => void
@@ -183,6 +220,53 @@ declare global {
       configAutoStart: (enabled: boolean) => Promise<{ sucesso: boolean; autoStart: boolean }>
       abrirApp: (path: string) => Promise<{ sucesso: boolean; erro?: string }>
       abrirSite: (url: string) => Promise<{ sucesso: boolean; erro?: string }>
+      launcherApps: () => Promise<
+        Array<{ nome: string; path?: string; url?: string; tipo: 'app' | 'site' }>
+      >
+      authPrecisaSetup: () => Promise<{ precisaSetup: boolean }>
+      authSetup: (
+        nome: string,
+        pin: string
+      ) => Promise<{ sucesso: boolean; usuarioId?: number; motivo?: string }>
+      authLogin: (
+        pin: string,
+        nome?: string
+      ) => Promise<{
+        sucesso: boolean
+        precisaSetup?: boolean
+        motivo?: string
+        sessao?: {
+          sessaoId: number
+          usuarioId: number
+          usuarioNome: string
+          workspaceId: number
+          workspaceNome: string
+        }
+      }>
+      authLogout: () => Promise<{ sucesso: boolean }>
+      authSessao: () => Promise<{
+        sessao: {
+          sessaoId: number
+          usuarioId: number
+          usuarioNome: string
+          workspaceId: number
+          workspaceNome: string
+        } | null
+      }>
+      onAuthSessao: (callback: (sessao: unknown) => void) => void
+      onAuthLogout: (callback: () => void) => void
+      workspacesListar: () => Promise<unknown[]>
+      workspacesAtivar: (id: number) => Promise<{ sucesso: boolean }>
+      notasListar: () => Promise<unknown[]>
+      notasAdicionar: (
+        corpo: string,
+        titulo?: string,
+        tarefaId?: number
+      ) => Promise<{ id: number; sucesso: boolean }>
+      notasRemover: (id: number) => Promise<{ sucesso: boolean }>
+      estacaoSetFullscreen: (ativo: boolean) => Promise<{ sucesso: boolean; fullscreen: boolean }>
+      estacaoGetFullscreen: () => Promise<{ fullscreen: boolean; fullscreenPadrao: boolean }>
+      politicasGet: () => Promise<{ whitelist: string[]; nivelInstalacao: string }>
     }
   }
 }
