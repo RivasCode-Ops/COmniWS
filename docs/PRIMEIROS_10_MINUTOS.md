@@ -1,5 +1,7 @@
 # Primeiros 10 minutos com Omni Work Station
 
+> **Guia completo:** para uso detalhado (modos, propostas, FOCO, IA, segunda tela), leia [`GUIA_DE_USO.md`](GUIA_DE_USO.md).
+
 ## 1. Instalação (2 min)
 - Baixe o instalador da release
 - Execute e siga os passos
