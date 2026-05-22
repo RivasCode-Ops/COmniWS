@@ -40,8 +40,8 @@ export function NotasWidget({ modoFoco, tarefaAtualId }: NotasWidgetProps) {
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-4">📝 Notas inteligentes</h2>
+    <div className="rounded-[var(--omni-radius-node)] p-4 border border-[var(--omni-border)] bg-[var(--omni-bg-elevated)]">
+      <h2 className="text-sm font-semibold mb-4 text-[var(--omni-text-primary)]">Notas inteligentes</h2>
 
       <div className="flex flex-col gap-2 mb-4">
         <input
@@ -49,7 +49,7 @@ export function NotasWidget({ modoFoco, tarefaAtualId }: NotasWidgetProps) {
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
           placeholder="Título (opcional)"
-          className="bg-gray-700 border border-gray-600 rounded-lg p-2 text-sm"
+          className="bg-[var(--omni-bg-base)] border border-[var(--omni-border)] rounded-lg p-2 text-sm w-full"
         />
         <textarea
           value={corpo}
@@ -58,11 +58,11 @@ export function NotasWidget({ modoFoco, tarefaAtualId }: NotasWidgetProps) {
             modoFoco ? 'Anotação rápida (foco ativo)...' : 'Capturar ideia, link, lembrete...'
           }
           rows={2}
-          className="bg-gray-700 border border-gray-600 rounded-lg p-2 text-sm resize-none"
+          className="bg-[var(--omni-bg-base)] border border-[var(--omni-border)] rounded-lg p-2 text-sm resize-none w-full"
         />
         <button
           onClick={adicionar}
-          className="bg-blue-600 hover:bg-blue-700 py-2 rounded-lg text-sm self-end px-4"
+          className="bg-[var(--omni-accent-focus)] hover:opacity-90 py-2 rounded-lg text-sm self-end px-4"
         >
           + Salvar nota
         </button>

@@ -45,6 +45,7 @@ Consulte `DIARIO.md` como fonte de verdade do progresso.
 | 8 | ✅ Implementada | Memória de decisões |
 | 9 | ✅ Implementada | Polimento, instalador, 10/10 |
 | 10 | ✅ Implementada | v1.5: login, launcher central, fullscreen, notas, executor winget |
+| 11 | ✅ Implementada | UI Command Surface (sidebar, node-cards, painel contextual) |
 
 **Escopo por fase:** não implementar funcionalidades de fases futuras sem alinhamento explícito do usuário.
 

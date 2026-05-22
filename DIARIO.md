@@ -19,6 +19,15 @@
 - **Oficial:** `docs/ESPECIFICACAO_OMNI_WORK_v2.md` (v1.0 entregue + v1.5 planejada)
 - **Diagnóstico:** `docs/DIAGNOSTICO_SPEC_v2.md`
 
+## Fase 11 - Omni Command Surface UI (CONCLUÍDA ✅)
+- [x] Tokens OCS (`omni-tokens.css`)
+- [x] Shell: sidebar + topbar + canvas + painel contextual
+- [x] Node-cards operacionais (5 tipos)
+- [x] Views: Hoje, Foco, Tarefas, Notas, Ferramentas, Ambiente, Workspaces, Config
+- [x] Command palette Ctrl+K
+- [x] Login unificado com linguagem visual
+- [x] Launcher integrado na view Hoje/Ferramentas (sem tela separada)
+
 ## Fase 10 - Estação v1.5 (CONCLUÍDA ✅)
 - [x] Tela de login local (perfil + PIN)
 - [x] Launcher central pós-login

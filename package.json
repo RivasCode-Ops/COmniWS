@@ -1,6 +1,6 @@
 {
   "name": "omniws",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Omni Work Station - Estação de trabalho local com IA regenerativa",
   "main": "out/main/index.js",
   "author": "Omni-Dev",

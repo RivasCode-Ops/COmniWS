@@ -1,0 +1,44 @@
+:root {
+  --omni-bg-base: #0d0f12;
+  --omni-bg-elevated: #141820;
+  --omni-bg-hover: #1a2030;
+  --omni-bg-canvas: #0f1218;
+  --omni-border: rgba(255, 255, 255, 0.06);
+  --omni-border-active: rgba(61, 139, 253, 0.45);
+  --omni-text-primary: #e8eaed;
+  --omni-text-muted: #8b9298;
+  --omni-text-dim: #5c6370;
+  --omni-accent-focus: #3d8bfd;
+  --omni-status-ok: #3ecf8e;
+  --omni-status-warn: #e5a84b;
+  --omni-status-error: #e85d5d;
+  --omni-status-idle: #6b7280;
+  --omni-cat-fluxo: #3d8bfd;
+  --omni-cat-contexto: #8b7cf6;
+  --omni-cat-ambiente: #e5a84b;
+  --omni-cat-intel: #5bb98c;
+  --omni-radius-node: 12px;
+  --omni-sidebar-w: 200px;
+  --omni-panel-w: 360px;
+  --omni-topbar-h: 48px;
+  --omni-font-sans: 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+  --omni-font-mono: 'Cascadia Code', 'Consolas', monospace;
+}
+
+.omni-shell {
+  font-family: var(--omni-font-sans);
+  background: var(--omni-bg-base);
+  color: var(--omni-text-primary);
+}
+
+.omni-mono {
+  font-family: var(--omni-font-mono);
+}
+
+.omni-canvas-grid {
+  background-color: var(--omni-bg-canvas);
+  background-image:
+    linear-gradient(var(--omni-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--omni-border) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
