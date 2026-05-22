@@ -1,0 +1,258 @@
+## Documento: Análise Geral do Projeto Omni Work Station
+
+> **⚠️ Histórico — não usar como spec ativa.** Base oficial: [`docs/ESPECIFICACAO_OMNI_WORK_v2.md`](docs/ESPECIFICACAO_OMNI_WORK_v2.md). Diagnóstico: [`docs/DIAGNOSTICO_SPEC_v2.md`](docs/DIAGNOSTICO_SPEC_v2.md).
+
+**Cópia para registro, auditoria e referência futura**
+
+---
+
+## 1. Identificação do Projeto
+
+| Campo | Valor |
+|-------|-------|
+| Nome do Sistema | Omni Work Station (OmniWS) |
+| Repositório | https://github.com/RivasCode-Ops/COmniWS |
+| Pasta Local | `C:\_PROJETOS\COmniWS` |
+| Versão Alvo | 1.0 (10/10) |
+| Tipo | Desktop local, Windows-first |
+
+---
+
+## 2. Problema que Resolve
+
+Hoje o trabalho fica espalhado entre:
+- Navegador (pesquisas, documentação)
+- Editor de código
+- Apps de tarefas (GTD)
+- Timers (Pomodoro)
+- Terminais e instaladores
+- Anotações soltas
+- Assistente IA (em outra aba/janela)
+
+**Resultado:** Troca de contexto constante, desgaste mental, perda de ritmo, ferramentas ausentes que interrompem o fluxo.
+
+---
+
+## 3. Solução Proposta
+
+Uma **única estação de trabalho fullscreen** que integra:
+
+- Dashboard central com launcher de apps/sites
+- GTD (Getting Things Done) nativo
+- Pomodoro com associação a tarefas
+- OmniScript: campo de anotação/conversa com IA (sem sair da tela)
+- Motor de Ambiente: detecta ferramentas ausentes via winget
+- IA Regenerativa: busca novidades em fontes curadas e propõe melhorias
+- Centro de Autorização: você decide o que instalar/mudar
+- Multitela: segunda janela com contexto sincronizado
+- Memória de Decisões: IA aprende com suas escolhas
+
+---
+
+## 4. Filosofia do Sistema (Não Negociável)
+
+| Princípio | Descrição |
+|-----------|-----------|
+| **Foco Primeiro** | Durante Pomodoro, tudo silencia. Zero interrupção. |
+| **Você Autoriza** | IA sugere, mas nunca age sozinha. |
+| **Local por Padrão** | Dados e IA rodam na sua máquina. Sem nuvem obrigatória. |
+| **Melhora Contínua** | IA fica mais relevante ao aprender com suas decisões. |
+| **Transparente** | Você pode ver o que a IA está pensando (stream). |
+
+---
+
+## 5. Arquitetura Geral
+
+### 5.1 Camadas
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Interface (React)                     │
+│  Dashboard | Launcher | Pomodoro | GTD | OmniScript      │
+├─────────────────────────────────────────────────────────┤
+│                 Estado e Modos (Context)                 │
+│         FOCO / FLEX / APRENDIZADO (máquina de estados)   │
+├─────────────────────────────────────────────────────────┤
+│                    IPC (Eventos)                         │
+│         Comunicação entre frontend e backend             │
+├─────────────────────────────────────────────────────────┤
+│                 Main Process (Electron)                  │
+│  Winget | SQLite | Ollama | Scheduler | WindowManager    │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 5.2 Módulos (M1 a M9)
+
+| ID | Módulo | Função |
+|----|--------|--------|
+| M1 | Interface | Tela de login, dashboard, launcher, multitela |
+| M2 | Motor de Contexto | Detecta workspace e modo atual |
+| M3 | Motor de Produtividade | Pomodoro, ciclos, pausas |
+| M4 | Motor de Organização | GTD (inbox, projetos, ações) |
+| M5 | Motor de Ambiente | Inventário via winget, detecção de ausências |
+| M6 | IA Regenerativa | Reativa (conversa) + Autônoma (sondagem) |
+| M7 | OmniScript | Campo de anotação/comando contínuo |
+| M8 | Centro de Autorização | Caixa de Propostas, aprovação/rejeição |
+| M9 | Memória de Decisões | Aprendizado por autorização, filtragem |
+
+### 5.3 Modos Operacionais
+
+| Modo | Ativação | Comportamento da IA | Notificações |
+|------|----------|---------------------|--------------|
+| **FOCO** | Pomodoro ativo | Silenciosa (só armazena anotações) | Zero |
+| **FLEX** | Padrão / entre pomodoros | Responde rápido, sondagem em fundo | Ícone suave |
+| **APRENDIZADO** | Manual (botão) | Mostra pensamento, ensina, revisa | Painel aberto |
+
+---
+
+## 6. Regras de Segurança (R1 a R6)
+
+| Regra | Descrição |
+|-------|-----------|
+| R1 | Nenhuma instalação/atualização/remoção sem autorização via M8 |
+| R2 | IA só busca em fontes curadas (lista branca configurável) |
+| R3 | Durante FOCO: IA não gera notificações, respostas ou propostas |
+| R4 | Toda ação autorizada é registrada em log local (imutável) |
+| R5 | Usuário pode desabilitar o modo autônomo a qualquer momento |
+| R6 | Telas auxiliares só abrem por comando explícito do usuário |
+
+---
+
+## 7. Tecnologias Escolhidas
+
+| Componente | Tecnologia | Justificativa |
+|------------|------------|----------------|
+| Desktop Framework | Electron + TypeScript | Janelas nativas, IPC maduro, comunidade grande |
+| Frontend | React + TailwindCSS | Componentização rápida, tema escuro/claro |
+| Banco de Dados | SQLite (better-sqlite3) | Zero configuração, local, transacional |
+| IA Local | Ollama + Llama 3.2 3B / Phi-3 mini | Privada, offline, <4GB RAM |
+| Busca Autônoma | node-fetch + RSS parser | Apenas fontes curadas (lista branca) |
+| Agendamento | node-schedule | Sondagem periódica em background |
+| Instalador | Electron Builder (NSIS) | Um clique para Windows |
+| Testes | Vitest + Playwright | Unitário + E2E |
+
+---
+
+## 8. As 9 Fases (O que será construído)
+
+| Fase | Nome | Duração Estimada (codificação) | O que entrega |
+|------|------|-------------------------------|---------------|
+| 1 | Fundação | 1 semana | Login mock, dashboard, launcher, máquina de estados |
+| 2 | Foco e GTD | 1 semana | Pomodoro, tarefas, associar timer |
+| 3 | OmniScript + IA Reativa | 1 semana | Campo de anotação, IA conversa, buffer no FOCO |
+| 4 | Inventário de Ambiente | 3 dias | winget list, detecção de ausências |
+| 5 | Autorização e Propostas | 3 dias | Caixa de Propostas, log de ações |
+| 6 | IA Autônoma Sondadora | 2 semanas | Busca em fontes curadas, stream de pensamento |
+| 7 | Multitela Sincronizada | 2 semanas | Segunda janela, IPC, contexto compartilhado |
+| 8 | Memória de Decisões | 2 semanas | Aprendizado por autorização, filtragem, decaimento |
+| 9 | Polimento e 10/10 | 1 semana | Instalador, docs, testes finais |
+
+**Total de codificação:** ~12-14 semanas (você testa no seu ritmo)
+
+---
+
+## 9. Métricas de Sucesso (10/10)
+
+| Métrica | Alvo |
+|---------|------|
+| Tempo login → primeiro Pomodoro | < 2 minutos |
+| Aceitação de propostas da IA | > 60% |
+| Conclusão de Pomodoros | > 85% |
+| Latência multitela (sincronização) | < 50ms |
+| Configuração inicial | < 10 minutos |
+| Uso contínuo sem travamento | 8 horas |
+| Satisfação do usuário (escala 1-5) | > 4.2 |
+
+---
+
+## 10. Riscos e Mitigações
+
+| Risco | Probabilidade | Impacto | Mitigação |
+|-------|---------------|---------|------------|
+| IA local lenta (>5s resposta) | Média | Médio | Usar modelo menor (Phi-3 mini), fallback para mensagem "processando" |
+| winget pode travar ou pedir GUI | Baixa | Médio | Timeout de 60s, flag --silent, fallback para instrução manual |
+| Usuário abandona por complexidade | Média | Alto | MVP sem IA autônoma; onboarding guiado em 10 min |
+| IA gera propostas irrelevantes | Média | Baixo | M9 filtra por histórico; usuário pode silenciar domínios |
+| Multitela perde sincronização | Baixa | Médio | Heartbeat entre janelas, reconexão automática |
+
+---
+
+## 11. Diferenciais Competitivos (Por que não existe igual)
+
+| Concorrente | O que falta | OmniWS tem |
+|-------------|-------------|-------------|
+| Amazing Marvin / TickTick | Controle de ambiente local, IA autônoma | ✅ |
+| Raycast AI / ChatGPT | GTD, Pomodoro, autorização de ações | ✅ |
+| Winget CLI / Chocolatey | IA, produtividade, interface | ✅ |
+| AutoGPT / BabyAGI | UI de estação, regras de segurança, FOCO | ✅ |
+| Qualquer dashboard | IA que aprende com decisões, multitela com contexto | ✅ |
+
+---
+
+## 12. Verificadores Finais para Certificação 10/10
+
+- [ ] Sistema nunca interrompe o foco sem permissão explícita
+- [ ] IA propõe, mas nunca age sozinha
+- [ ] Usuário pode acompanhar modo autônomo (stream) ou ignorar
+- [ ] Múltiplas telas compartilham o mesmo contexto
+- [ ] IA melhora sugestões com base nas decisões do usuário
+- [ ] Nenhuma dependência obrigatória de nuvem
+- [ ] Novo usuário configura em <10 minutos
+- [ ] Sistema sustenta 8h de trabalho sem travamentos
+
+---
+
+## 13. Histórico de Decisões Arquiteturais (ADR)
+
+| Decisão | Escolha | Data |
+|---------|---------|------|
+| Framework desktop | Electron + TypeScript | Fase 1 |
+| Banco de dados | SQLite | Fase 1 |
+| UI | React + TailwindCSS | Fase 1 |
+| IA local | Ollama (Llama 3.2 3B) | Fase 3 |
+| Busca autônoma | RSS/Atom em lista branca | Fase 6 |
+| Comunicação multitela | IPC (Electron) | Fase 7 |
+| Aprendizado | Decaimento exponencial por recusas | Fase 8 |
+
+---
+
+## 14. Próximos Passos Imediatos
+
+1. **Criar estrutura de pastas** em `C:\_PROJETOS\COmniWS`
+2. **Adicionar arquivos da Fase 1** (código base)
+3. **Rodar `npm install`** e testar se a janela abre
+4. **Validar** launcher, máquina de estados, dashboard
+5. **Aprovar Fase 1** para seguir para Fase 2
+
+---
+
+## 15. Comandos Rápidos para Você (Copiar e Colar)
+
+```bash
+# Entrar na pasta
+cd C:\_PROJETOS\COmniWS
+
+# Inicializar Git (se não tiver)
+git init
+
+# Conectar ao GitHub
+git remote add origin https://github.com/RivasCode-Ops/COmniWS.git
+
+# Instalar dependências (após colocar os arquivos)
+npm install
+
+# Rodar o sistema
+npm run dev
+```
+
+---
+
+## Documento Finalizado
+
+**Data da análise:** 2026-05-22  
+**Analista:** Omni-Analyst / Omni-Dev  
+**Status do projeto:** Aguardando início da Fase 1
+
+---
+
+*Este documento serve como contrato técnico e visão de produto. Qualquer desvio deve ser documentado e aprovado.*

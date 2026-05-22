@@ -15,6 +15,10 @@
 - [x] Auto-start opcional (electron-store + IPC)
 - [x] Build final configurada (v1.0.0)
 
+## Especificação de produto
+- **Oficial:** `docs/ESPECIFICACAO_OMNI_WORK_v2.md` (v1.0 entregue + v1.5 planejada)
+- **Diagnóstico:** `docs/DIAGNOSTICO_SPEC_v2.md`
+
 ## PROGRESSO FINAL
 ████████████████████████████████████████ 100% (9/9 fases)
 
