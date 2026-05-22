@@ -41,10 +41,15 @@
 - [x] Comando de instalação sugerido (não automático)
 - [x] Exibição de apps instaladas (versão)
 
-## Fase 5 - Pendente
-- [ ] Caixa de Propostas centralizada
-- [ ] Botões Autorizar/Recusar/Agendar
-- [ ] Log de ações (audit_log)
+## Fase 5 - Caixa de Propostas (CONCLUÍDA ✅)
+- [x] Tabela `propostas` no SQLite
+- [x] Tabela `audit_log` no SQLite
+- [x] Caixa de Propostas como componente React
+- [x] Botões Autorizar/Recusar/Agendar/Recusar sempre
+- [x] Notificações de novas propostas
+- [x] Integração com Ambiente (cria proposta em vez de sugerir diretamente)
+- [x] Log de ações visível
+- [x] Regras R1-R4 implementadas (nada sem autorização)
 
 ## Fase 6 - Pendente
 - [ ] IA autônoma com sondagem
@@ -61,4 +66,4 @@
 - [ ] Polimento final
 
 ## Progresso
-Fase 1: 100% | Fase 2: 100% | Fase 3: 100% | Fase 4: 100% | Demais: 0%
+Fase 1: 100% | Fase 2: 100% | Fase 3: 100% | Fase 4: 100% | Fase 5: 100% | Demais: 0%

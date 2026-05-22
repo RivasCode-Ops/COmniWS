@@ -42,6 +42,27 @@ function initDatabase() {
       modo TEXT DEFAULT 'FOCO',
       processada INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS propostas (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      titulo TEXT NOT NULL,
+      descricao TEXT NOT NULL,
+      tipo TEXT NOT NULL,
+      acao TEXT NOT NULL,
+      dados TEXT,
+      status TEXT DEFAULT 'pendente',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      acao TEXT NOT NULL,
+      tipo_recurso TEXT NOT NULL,
+      recurso_id INTEGER,
+      detalhes TEXT,
+      status TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `)
 
@@ -320,13 +341,143 @@ ipcMain.handle('ambiente-inventario', async () => {
   }
 })
 
-ipcMain.handle('ambiente-instalar', async (_, appId: string, appNome: string) => {
-  return {
-    sucesso: false,
-    precisaAutorizacao: true,
-    comando: `winget install --id ${appId} --accept-package-agreements`,
-    mensagem: `Para instalar ${appNome}, execute no terminal (ou autorize na Caixa de Propostas Fase 5)`
+ipcMain.handle('propostas-listar', () => {
+  const stmt = db.prepare("SELECT * FROM propostas WHERE status = 'pendente' ORDER BY created_at ASC")
+  return stmt.all()
+})
+
+ipcMain.handle(
+  'propostas-criar',
+  (_, titulo: string, descricao: string, tipo: string, acao: string, dados?: unknown) => {
+    const stmt = db.prepare(
+      'INSERT INTO propostas (titulo, descricao, tipo, acao, dados, status) VALUES (?, ?, ?, ?, ?, ?)'
+    )
+    const result = stmt.run(
+      titulo,
+      descricao,
+      tipo,
+      acao,
+      dados ? JSON.stringify(dados) : null,
+      'pendente'
+    )
+
+    if (mainWindow) {
+      mainWindow.webContents.send('nova-proposta', {
+        id: result.lastInsertRowid,
+        titulo,
+        descricao
+      })
+    }
+
+    return { id: result.lastInsertRowid }
   }
+)
+
+ipcMain.handle('propostas-autorizar', async (_, id: number) => {
+  const getStmt = db.prepare('SELECT * FROM propostas WHERE id = ?')
+  const proposta = getStmt.get(id) as {
+    id: number
+    tipo: string
+    dados: string | null
+  } | undefined
+
+  if (!proposta) return { sucesso: false, motivo: 'Proposta nao encontrada' }
+
+  const updateStmt = db.prepare("UPDATE propostas SET status = 'autorizada' WHERE id = ?")
+  updateStmt.run(id)
+
+  const logStmt = db.prepare(
+    'INSERT INTO audit_log (acao, tipo_recurso, recurso_id, detalhes, status) VALUES (?, ?, ?, ?, ?)'
+  )
+  logStmt.run('autorizar', 'proposta', id, JSON.stringify(proposta), 'sucesso')
+
+  let resultado: { sucesso: boolean; comando?: string; mensagem?: string } = { sucesso: true }
+  if (proposta.tipo === 'instalacao') {
+    const dados = proposta.dados ? JSON.parse(proposta.dados) : {}
+    resultado = {
+      sucesso: true,
+      comando: `winget install --id ${dados.appId} --accept-package-agreements`,
+      mensagem: `Execute no terminal para instalar ${dados.appNome}`
+    }
+  }
+
+  if (mainWindow) {
+    mainWindow.webContents.send('proposta-atualizada', { id, status: 'autorizada' })
+  }
+
+  return { sucesso: true, ...resultado }
+})
+
+ipcMain.handle('propostas-recusar', (_, id: number, paraSempre: boolean = false) => {
+  const status = paraSempre ? 'recusado_sempre' : 'recusado'
+  const updateStmt = db.prepare('UPDATE propostas SET status = ? WHERE id = ?')
+  updateStmt.run(status, id)
+
+  const logStmt = db.prepare(
+    'INSERT INTO audit_log (acao, tipo_recurso, recurso_id, detalhes, status) VALUES (?, ?, ?, ?, ?)'
+  )
+  logStmt.run(
+    paraSempre ? 'recusar_sempre' : 'recusar',
+    'proposta',
+    id,
+    JSON.stringify({ paraSempre }),
+    'sucesso'
+  )
+
+  if (mainWindow) {
+    mainWindow.webContents.send('proposta-atualizada', { id, status })
+  }
+
+  return { sucesso: true }
+})
+
+ipcMain.handle('propostas-agendar', (_, id: number, dataHora: string) => {
+  const updateStmt = db.prepare("UPDATE propostas SET status = 'agendado', dados = ? WHERE id = ?")
+  updateStmt.run(JSON.stringify({ agendadoPara: dataHora }), id)
+
+  const logStmt = db.prepare(
+    'INSERT INTO audit_log (acao, tipo_recurso, recurso_id, detalhes, status) VALUES (?, ?, ?, ?, ?)'
+  )
+  logStmt.run('agendar', 'proposta', id, JSON.stringify({ agendadoPara: dataHora }), 'sucesso')
+
+  if (mainWindow) {
+    mainWindow.webContents.send('proposta-atualizada', { id, status: 'agendado' })
+  }
+
+  return { sucesso: true }
+})
+
+ipcMain.handle('audit-log-listar', (_, limite: number = 50) => {
+  const stmt = db.prepare('SELECT * FROM audit_log ORDER BY created_at DESC LIMIT ?')
+  return stmt.all(limite)
+})
+
+ipcMain.handle('ambiente-sugerir-instalacao', (_, appId: string, appNome: string) => {
+  const titulo = `Instalar ${appNome}`
+  const descricao =
+    'Ferramenta ausente no contexto "Desenvolvimento". A instalação pode ser feita via winget.'
+
+  const createStmt = db.prepare(
+    'INSERT INTO propostas (titulo, descricao, tipo, acao, dados, status) VALUES (?, ?, ?, ?, ?, ?)'
+  )
+  const result = createStmt.run(
+    titulo,
+    descricao,
+    'instalacao',
+    'instalar',
+    JSON.stringify({ appId, appNome }),
+    'pendente'
+  )
+
+  if (mainWindow) {
+    mainWindow.webContents.send('nova-proposta', {
+      id: result.lastInsertRowid,
+      titulo,
+      descricao
+    })
+  }
+
+  return { sucesso: true, propostaId: result.lastInsertRowid }
 })
 
 ipcMain.handle('abrir-app', async (_, appPath: string) => {

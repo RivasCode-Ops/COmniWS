@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { CaixaPropostas } from './components/CaixaPropostas'
 
 interface Estado {
   modo: 'FOCO' | 'FLEX' | 'APRENDIZADO'
@@ -51,6 +52,7 @@ function App() {
 
   const [inventario, setInventario] = useState<Inventario | null>(null)
   const [carregandoInventario, setCarregandoInventario] = useState(false)
+  const [mostrarCaixaPropostas, setMostrarCaixaPropostas] = useState(false)
 
   const carregarTarefas = async () => {
     const lista = await window.electronAPI.tarefasListar()
@@ -84,6 +86,10 @@ function App() {
     window.electronAPI.onPomodoroTerminado(() => {
       setMensagemNotificacao('✅ Pomodoro concluído! Hora da pausa.')
       setTimeout(() => setMensagemNotificacao(''), 5000)
+    })
+    window.electronAPI.onNovaProposta((proposta) => {
+      setMensagemNotificacao(`📦 Nova proposta: ${proposta.titulo}`)
+      setTimeout(() => setMensagemNotificacao(''), 4000)
     })
     window.electronAPI.onProcessarBuffer(async () => {
       setMensagemNotificacao('📝 Processando anotações do FOCO...')
@@ -242,6 +248,12 @@ function App() {
         </div>
 
         <div className="flex gap-2">
+          <button
+            onClick={() => setMostrarCaixaPropostas(!mostrarCaixaPropostas)}
+            className={`px-3 py-1 rounded transition ${mostrarCaixaPropostas ? 'bg-blue-600' : 'bg-gray-700'}`}
+          >
+            📦 Propostas
+          </button>
           <button
             onClick={() => window.electronAPI.setModo('FLEX')}
             className={`px-3 py-1 rounded transition ${estado.modo === 'FLEX' ? 'bg-yellow-500 text-black' : 'bg-gray-700'}`}
@@ -495,19 +507,22 @@ function App() {
                         >
                           <span>{app.nome}</span>
                           <button
-                            onClick={() =>
-                              window.electronAPI
-                                .ambienteInstalar(app.id, app.nome)
-                                .then((res) => {
-                                  setMensagemNotificacao(
-                                    res.mensagem || `Comando: ${res.comando}`
-                                  )
-                                  setTimeout(() => setMensagemNotificacao(''), 5000)
-                                })
-                            }
+                            onClick={async () => {
+                              const result = await window.electronAPI.ambienteSugerirInstalacao(
+                                app.id,
+                                app.nome
+                              )
+                              if (result.sucesso) {
+                                setMensagemNotificacao(
+                                  '✅ Proposta criada! Vá em "Propostas" para autorizar.'
+                                )
+                                setTimeout(() => setMensagemNotificacao(''), 3000)
+                                setMostrarCaixaPropostas(true)
+                              }
+                            }}
                             className="text-blue-400 hover:text-blue-300 text-sm px-2 py-1"
                           >
-                            📦 Instalar
+                            📦 Sugerir Instalação
                           </button>
                         </div>
                       ))}
@@ -541,6 +556,12 @@ function App() {
             )}
           </div>
         </div>
+
+        {mostrarCaixaPropostas && (
+          <div className="mt-6">
+            <CaixaPropostas />
+          </div>
+        )}
       </main>
     </div>
   )

@@ -32,10 +32,27 @@ contextBridge.exposeInMainWorld('electronAPI', {
   tarefasConcluir: (id: number) => ipcRenderer.invoke('tarefas-concluir', id),
   tarefasRemover: (id: number) => ipcRenderer.invoke('tarefas-remover', id),
 
+  // Propostas
+  propostasListar: () => ipcRenderer.invoke('propostas-listar'),
+  propostasCriar: (titulo: string, descricao: string, tipo: string, acao: string, dados?: unknown) =>
+    ipcRenderer.invoke('propostas-criar', titulo, descricao, tipo, acao, dados),
+  propostasAutorizar: (id: number) => ipcRenderer.invoke('propostas-autorizar', id),
+  propostasRecusar: (id: number, paraSempre: boolean) =>
+    ipcRenderer.invoke('propostas-recusar', id, paraSempre),
+  propostasAgendar: (id: number, dataHora: string) =>
+    ipcRenderer.invoke('propostas-agendar', id, dataHora),
+  onNovaProposta: (callback: (proposta: { id: number; titulo: string; descricao: string }) => void) => {
+    ipcRenderer.on('nova-proposta', (_, proposta) => callback(proposta))
+  },
+  onPropostaAtualizada: (callback: (data: { id: number; status: string }) => void) => {
+    ipcRenderer.on('proposta-atualizada', (_, data) => callback(data))
+  },
+  auditLogListar: (limite?: number) => ipcRenderer.invoke('audit-log-listar', limite),
+
   // Ambiente (winget)
   ambienteInventario: () => ipcRenderer.invoke('ambiente-inventario'),
-  ambienteInstalar: (appId: string, appNome: string) =>
-    ipcRenderer.invoke('ambiente-instalar', appId, appNome),
+  ambienteSugerirInstalacao: (appId: string, appNome: string) =>
+    ipcRenderer.invoke('ambiente-sugerir-instalacao', appId, appNome),
 
   // Launcher
   abrirApp: (path: string) => ipcRenderer.invoke('abrir-app', path),
@@ -75,6 +92,22 @@ declare global {
       tarefasAdicionar: (titulo: string) => Promise<{ id: number; titulo: string }>
       tarefasConcluir: (id: number) => Promise<{ sucesso: boolean }>
       tarefasRemover: (id: number) => Promise<{ sucesso: boolean }>
+      propostasListar: () => Promise<unknown[]>
+      propostasCriar: (
+        titulo: string,
+        descricao: string,
+        tipo: string,
+        acao: string,
+        dados?: unknown
+      ) => Promise<{ id: number }>
+      propostasAutorizar: (
+        id: number
+      ) => Promise<{ sucesso: boolean; comando?: string; mensagem?: string; motivo?: string }>
+      propostasRecusar: (id: number, paraSempre: boolean) => Promise<{ sucesso: boolean }>
+      propostasAgendar: (id: number, dataHora: string) => Promise<{ sucesso: boolean }>
+      onNovaProposta: (callback: (proposta: { id: number; titulo: string; descricao: string }) => void) => void
+      onPropostaAtualizada: (callback: (data: { id: number; status: string }) => void) => void
+      auditLogListar: (limite?: number) => Promise<unknown[]>
       ambienteInventario: () => Promise<{
         instalados: Array<{ nome: string; id: string; versao: string }>
         ausentes: Array<{ nome: string; id: string }>
@@ -82,15 +115,10 @@ declare global {
         totalAusentes: number
         timestamp: string
       }>
-      ambienteInstalar: (
+      ambienteSugerirInstalacao: (
         appId: string,
         appNome: string
-      ) => Promise<{
-        sucesso: boolean
-        precisaAutorizacao?: boolean
-        comando?: string
-        mensagem?: string
-      }>
+      ) => Promise<{ sucesso: boolean; propostaId: number }>
       abrirApp: (path: string) => Promise<{ sucesso: boolean; erro?: string }>
       abrirSite: (url: string) => Promise<{ sucesso: boolean; erro?: string }>
     }
